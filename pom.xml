@@ -4,7 +4,7 @@
 
     <groupId>com.github.sftwnd.crayfish.common</groupId>
     <artifactId>crayfish-common-functional</artifactId>
-    <version>0.0.1-M1</version>
+    <version>0.0.1-M2-SNAPSHOT</version>
 
     <name>CrayFish :: COMMON :: Functional</name>
     <description>
@@ -33,7 +33,7 @@
         <url>https://github.com.github.sftwnd/crayfish-common-functional</url>
         <connection>scm:git:https://github.com/sftwnd/crayfish-common-functional.git</connection>
         <developerConnection>scm:git:git@github.com:sftwnd/crayfish-common-functional.git</developerConnection>
-        <tag>crayfish-common-functional-0.0.1-M1</tag>
+        <tag>crayfish-common-functional-0.0.2</tag>
     </scm>
 
     <distributionManagement>
