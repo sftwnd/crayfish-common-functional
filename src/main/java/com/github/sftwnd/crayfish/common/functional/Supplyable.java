@@ -12,6 +12,8 @@ import java.util.function.Supplier;
  * Интерфейс является одновременно и {@link Supplier} и {@link Callable}. В случае с Supplier::get вызывается метод Callable::call,
  * но если будет выброшено исключение, то оно через lombok {@link SneakyThrows} будет обёрнуто в Runtime исключение и выброшено наружу.
  * @param <T> тип результата
+ * Used sonar warnings:
+ *      java:S112   Generic exceptions should never be thrown
  */
 @FunctionalInterface
 public interface Supplyable<T> extends Supplier<T>, Callable<T> {
@@ -22,7 +24,7 @@ public interface Supplyable<T> extends Supplier<T>, Callable<T> {
      * @throws Exception исключение, произошедшее в результате вычисления
      */
     @Override
-    T call() throws Exception;
+    T call() throws Exception; //NOSONAR java:S112 Generic exceptions should never be thrown
 
     /**
      * Функция вычисляет результата
@@ -59,7 +61,7 @@ public interface Supplyable<T> extends Supplier<T>, Callable<T> {
      * @param <T> тип результата
      */
     static @NonNull <T> Supplyable<T> cast(@NonNull Supplier<T> supplier) {
-        return Objects.requireNonNull(supplier, "Supplyable::cast - supplyable is null")::get;
+        return Objects.requireNonNull(supplier, "Supplyable::functional - supplyable is null")::get;
     }
 
 }

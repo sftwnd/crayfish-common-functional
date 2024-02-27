@@ -10,7 +10,6 @@
     <description>
         Extension to base java primitives: Runnable, Callable, Function, Consumer, BiFunction, BiConsumer and Supplier
     </description>
-
     <url>https://github.com/sftwnd/crayfish-common-functional</url>
 
     <licenses>
@@ -34,7 +33,7 @@
         <url>https://github.com.github.sftwnd/crayfish-common-functional</url>
         <connection>scm:git:https://github.com/sftwnd/crayfish-common-functional.git</connection>
         <developerConnection>scm:git:git@github.com:sftwnd/crayfish-common-functional.git</developerConnection>
-        <tag>HEAD</tag>
+        <tag>crayfish-common-functional-0.0.2</tag>
     </scm>
 
     <distributionManagement>
@@ -65,16 +64,14 @@
         <maven-surefire-plugin.version>3.2.5</maven-surefire-plugin.version>
         <maven-release-plugin.version>3.0.1</maven-release-plugin.version>
         <maven-gpg-plugin.version>3.1.0</maven-gpg-plugin.version>
-        <jacoco-maven-plugin.version>0.8.11</jacoco-maven-plugin.version>
+        <jacoco-maven-plugin.version>0.8.10</jacoco-maven-plugin.version>
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>${lombok.version}</version>
             <scope>provided</scope>
-            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>com.github.spotbugs</groupId>
@@ -120,7 +117,6 @@
                         <arg>-Xlint:all</arg>
                         <arg>-Xlint:-requires-automatic</arg>
                         <arg>-Xlint:-processing</arg>
-                        <arg>-Xlint:-requires-automatic</arg>
                     </compilerArgs>
                     <showWarnings>true</showWarnings>
                 </configuration>
@@ -160,9 +156,6 @@
                     <includes>
                         <include>**/*Test.java</include>
                     </includes>
-                    <argLine>--illegal-access=permit</argLine>
-                    <argLine>--add-opens sftwnd_crayfish_common_functional/com.github.sftwnd.crayfish.common.functional=ALL-UNNAMED</argLine>
-                    <argLine>--add-opens sftwnd_crayfish_common_functional.test/com.github.sftwnd.crayfish.common.functional.test=ALL-UNNAMED</argLine>
                 </configuration>
             </plugin>
             <plugin>

@@ -10,15 +10,17 @@ import java.util.function.Consumer;
  * Расширение {@link Consumer}, но метод может бросать исключение.
  * Помимо {@link Consumer} сам {@link Consumable} является {@link Functional}, возвращающим Void
  * @param <T> тип параметра
+ * Used sonar warnings:
+ *      java:S112   Generic exceptions should never be thrown
  */
-public interface Consumable<T> extends Consumer<T>, Functional<T, Void> {
+public interface Consumable<T> extends Consumer<T> {
 
     /**
      * Применяет метод к заданному аргументу
      * @param parameter параметр метода
      * @throws Exception исключение, произошедшее в результате исполнения
      */
-    void process(T parameter) throws Exception;
+    void process(T parameter) throws Exception; //NOSONAR java:S112 Generic exceptions should never be thrown
 
     /**
      * Применяет метод к заданному аргументу
@@ -36,8 +38,7 @@ public interface Consumable<T> extends Consumer<T>, Functional<T, Void> {
      * @return null, как значение типа {@link Void}
      * @throws Exception исключение, произошедшее в результате исполнения
      */
-    @Override
-    default Void execute(T parameter) throws Exception {
+    default Void call(T parameter) throws Exception {
         return functionally(parameter);
     }
 
@@ -65,10 +66,10 @@ public interface Consumable<T> extends Consumer<T>, Functional<T, Void> {
     /**
      * Метод приведения {@link Consumable} к функции, возвращающей null как результат заданного типа
      * @return {@link Functional} с результатом null заданного типа
-     * @param <TT> тип параметра функции
+     * @param <X> тип параметра функции
      * @param <R> тип результата
      */
-    default <TT extends T, R> Functional<TT, R> cast() {
+    default <X extends T, R> Functional<X, R> functional() {
         return this::functionally;
     }
 
@@ -76,10 +77,10 @@ public interface Consumable<T> extends Consumer<T>, Functional<T, Void> {
      * Метод приведения {@link Consumable} к функции, возвращающей null как результат заданного типа
      * @param clazz {@link Class} к которому приводится результат
      * @return {@link Functional} с результатом null заданного типа
-     * @param <TT> тип параметра функции
+     * @param <X> тип параметра функции
      * @param <R> тип результата
      */
-    default <TT extends T, R> Functional<TT, R> cast(@NonNull Class<? extends R> clazz) {
+    default <X extends T, R> Functional<X, R> functional(@NonNull Class<? extends R> clazz) {
         Objects.requireNonNull(clazz, "Consumable::class - clazz is null");
         return this::functionally;
     }
@@ -101,7 +102,7 @@ public interface Consumable<T> extends Consumer<T>, Functional<T, Void> {
      * @param <T> тип параметра
      */
     static @NonNull <T> Consumable<T> cast(@NonNull Consumer<T> consumer) {
-        return Objects.requireNonNull(consumer, "Consumable::cast - consumer is null")::accept;
+        return Objects.requireNonNull(consumer, "Consumable::functional - consumer is null")::accept;
     }
 
 }

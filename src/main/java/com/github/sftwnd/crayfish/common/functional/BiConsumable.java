@@ -12,8 +12,10 @@ import java.util.function.BiConsumer;
  * Помимо {@link BiConsumer} сам {@link BiConsumable} является {@link BiFunctional}, возвращающим Void
  * @param <T> тип первого параметра
  * @param <U> тип второго параметра
+ * Used sonar warnings:
+ *      java:S112   Generic exceptions should never be thrown
  */
-public interface BiConsumable <T, U> extends BiConsumer<T, U>, BiFunctional<T, U, Void> {
+public interface BiConsumable <T, U> extends BiConsumer<T, U> {
 
     /**
      * Применение метода к заданным аргументам с декларацией пробрасываемого исключения
@@ -21,7 +23,7 @@ public interface BiConsumable <T, U> extends BiConsumer<T, U>, BiFunctional<T, U
      * @param right второй параметр метода
      * @throws Exception исключение, произошедшее в результате исполнения
      */
-    void process(T left, U right) throws Exception;
+    void process(T left, U right) throws Exception; //NOSONAR java:S112 Generic exceptions should never be thrown
 
     /**
      * Применение метода к заданным аргументам
@@ -42,8 +44,7 @@ public interface BiConsumable <T, U> extends BiConsumer<T, U>, BiFunctional<T, U
      * @return Void как результат выполнения
      * @throws Exception исключение, произошедшее в результате исполнения
      */
-    @Override
-    default Void execute(T left, U right) throws Exception {
+    default Void call(T left, U right) throws Exception {
         return functionally(left, right);
     }
 
@@ -91,11 +92,11 @@ public interface BiConsumable <T, U> extends BiConsumer<T, U>, BiFunctional<T, U
     /**
      * Метод приведения {@link BiConsumable} к функции, возвращающей null как результат заданного типа
      * @return {@link Functional} с результатом null заданного типа
-     * @param <TT> тип левого параметра
-     * @param <UU> тип правого параметра
-     * @param <X> тип результата
+     * @param <X> тип левого параметра
+     * @param <Y> тип правого параметра
+     * @param <R> тип результата
      */
-    default <TT extends T, UU extends U, X> @NonNull BiFunctional<TT, UU, X> cast() {
+    default <X extends T, Y extends U, R> @NonNull BiFunctional<X, Y, R> functional() {
         return this::functionally;
     }
 
@@ -103,11 +104,11 @@ public interface BiConsumable <T, U> extends BiConsumer<T, U>, BiFunctional<T, U
      * Метод приведения {@link BiConsumable} к функции, возвращающей null как результат заданного типа
      * @param clazz {@link Class} к которому приводится результат
      * @return {@link Functional} с результатом null заданного типа
-     * @param <TT> тип левого параметра
-     * @param <UU> тип правого параметра
+     * @param <X> тип левого параметра
+     * @param <Y> тип правого параметра
      * @param <R> тип результата
      */
-    default <TT extends T, UU extends U, R> @NonNull BiFunctional<TT, UU, R> cast(@NonNull Class<? extends R> clazz) {
+    default <X extends T, Y extends U, R> @NonNull BiFunctional<X, Y, R> functional(@NonNull Class<? extends R> clazz) {
         Objects.requireNonNull(clazz, "BiConsumable::class - clazz is null");
         return this::functionally;
     }
@@ -131,7 +132,7 @@ public interface BiConsumable <T, U> extends BiConsumer<T, U>, BiFunctional<T, U
      * @param <U> тип второго параметра
      */
     static @NonNull <T, U> BiConsumable<T, U> cast(@NonNull BiConsumer<T, U> biconsumer) {
-        return Objects.requireNonNull(biconsumer, "BiConsumable::cast - biconsumer is null")::accept;
+        return Objects.requireNonNull(biconsumer, "BiConsumable::functional - biconsumer is null")::accept;
     }
 
 }

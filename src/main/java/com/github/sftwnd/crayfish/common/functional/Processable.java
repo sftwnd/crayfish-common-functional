@@ -8,14 +8,16 @@ import java.util.Objects;
 /**
  * Расширение {@link Runnable}, но метод может бросать исключение.
  * Помимо {@link Runnable} сам {@link Processable} является {@link Supplyable}, возвращающий Void
+ * Used sonar warnings:
+ *      java:S112   Generic exceptions should never be thrown
  */
-public interface Processable extends Runnable, Supplyable<Void> {
+public interface Processable extends Runnable {
 
     /**
      * Выполняет основной метод
      * @throws Exception исключение, произошедшее в результате исполнения
      */
-    void process() throws Exception;
+    void process() throws Exception; //NOSONAR java:S112 Generic exceptions should never be thrown
 
     /**
      * Выполняет основной метод
@@ -31,7 +33,6 @@ public interface Processable extends Runnable, Supplyable<Void> {
      * @return Void в качестве результата
      * @throws Exception исключение, произошедшее в результате исполнения
      */
-    @Override
     default Void call() throws Exception {
         return supplied();
     }
@@ -52,7 +53,7 @@ public interface Processable extends Runnable, Supplyable<Void> {
      * @return {@link Supplyable} с результатом null заданного типа
      * @param <R> тип результата
      */
-    default <R> Supplyable<R> cast() {
+    default <R> Supplyable<R> functional() {
         return this::supplied;
     }
 
@@ -62,7 +63,7 @@ public interface Processable extends Runnable, Supplyable<Void> {
      * @return {@link Supplyable} с результатом null заданного типа
      * @param <R> тип результата
      */
-    default <R> Supplyable<R> cast(@NonNull Class<? extends R> clazz) {
+    default <R> Supplyable<R> functional(@NonNull Class<? extends R> clazz) {
         Objects.requireNonNull(clazz, "Consumable::class - clazz is null");
         return this::supplied;
     }

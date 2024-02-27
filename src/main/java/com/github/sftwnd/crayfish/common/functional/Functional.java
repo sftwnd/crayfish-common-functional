@@ -10,6 +10,8 @@ import java.util.function.Function;
  * Расширение {@link Function}, но метод может бросать исключение.
  * @param <T> тип параметра
  * @param <R> тип результата
+ * Used sonar warnings:
+ *      java:S112   Generic exceptions should never be thrown
  */
 @FunctionalInterface
 public interface Functional<T, R> extends Function<T, R> {
@@ -20,7 +22,7 @@ public interface Functional<T, R> extends Function<T, R> {
      * @return результат применения функции
      * @throws Exception исключение, произошедшее в результате исполнения
      */
-    R execute(T parameter) throws Exception;
+    R execute(T parameter) throws Exception; //NOSONAR java:S112 Generic exceptions should never be thrown
 
     /**
      * Применяет функцию к заданному аргументу
@@ -78,7 +80,7 @@ public interface Functional<T, R> extends Function<T, R> {
      * @param <R> тип результата
      */
     static @NonNull <T, R> Functional<T, R> cast(@NonNull Function<T, R> function) {
-        return Objects.requireNonNull(function, "Functional::cast - function is null")::apply;
+        return Objects.requireNonNull(function, "Functional::functional - function is null")::apply;
     }
 
 }

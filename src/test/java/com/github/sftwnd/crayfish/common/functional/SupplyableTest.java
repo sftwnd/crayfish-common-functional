@@ -1,6 +1,5 @@
-package com.github.sftwnd.crayfish.common.functional.test;
+package com.github.sftwnd.crayfish.common.functional;
 
-import com.github.sftwnd.crayfish.common.functional.Supplyable;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -90,7 +89,7 @@ class SupplyableTest {
 
     @Test
     void staticCastDoesNotThrowOnSupplierTest() {
-        assertDoesNotThrow(() -> cast(Object::new), "Supplyable.cast unable to create Supplyable from real Supplier");
+        assertDoesNotThrow(() -> cast(Object::new), "Supplyable.functional unable to create Supplyable from real Supplier");
     }
 
     @Test

@@ -11,6 +11,8 @@ import java.util.function.BiFunction;
  * @param <T> тип первого параметра
  * @param <U> тип второго параметра
  * @param <R> тип результата
+ * Used sonar warnings:
+ *      java:S112   Generic exceptions should never be thrown
  */
 @FunctionalInterface
 public interface BiFunctional<T, U, R> extends BiFunction<T, U, R> {
@@ -22,7 +24,7 @@ public interface BiFunctional<T, U, R> extends BiFunction<T, U, R> {
      * @return результат применения функции
      * @throws Exception исключение, произошедшее в результате исполнения
      */
-    R execute(T left, U right) throws Exception;
+    R execute(T left, U right) throws Exception; //NOSONAR java:S112 Generic exceptions should never be thrown
 
     /**
      * Применяет функцию к заданному аргументу
@@ -103,7 +105,7 @@ public interface BiFunctional<T, U, R> extends BiFunction<T, U, R> {
      * @param <R> тип результата
      */
     static @NonNull <T, U, R> BiFunctional<T, U, R> cast(@NonNull BiFunction<T, U, R> bifunction) {
-        return Objects.requireNonNull(bifunction, "BiFunctional::cast - bifunction is null")::apply;
+        return Objects.requireNonNull(bifunction, "BiFunctional::functional - bifunction is null")::apply;
     }
 
 }

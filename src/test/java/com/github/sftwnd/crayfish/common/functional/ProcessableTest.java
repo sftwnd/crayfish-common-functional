@@ -1,6 +1,5 @@
-package com.github.sftwnd.crayfish.common.functional.test;
+package com.github.sftwnd.crayfish.common.functional;
 
-import com.github.sftwnd.crayfish.common.functional.Processable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,7 +13,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-public class ProcessableTest {
+class ProcessableTest {
 
     @Test
     void processTest() {
@@ -49,16 +48,16 @@ public class ProcessableTest {
     }
 
     @Test
-    void castClassTest() {
-        assertDoesNotThrow(() -> processable.cast(Number.class), "processable.cast(Class) throws exception");
-        assertDoesNotThrow(processable::process, "processable.cast(Class).process() throws exception");
+    void functionalClassTest() {
+        assertDoesNotThrow(() -> processable.functional(Number.class), "processable.functional(Class) throws exception");
+        assertDoesNotThrow(processable::process, "processable.functional(Class).process() throws exception");
         verify(runnable, times(1)).run();
     }
 
     @Test
-    void castTest() {
-        assertDoesNotThrow(() -> processable.cast(), "processable.cast() throws exception");
-        assertDoesNotThrow(processable::process, "processable.cast().process() throws exception");
+    void functionalTest() {
+        assertDoesNotThrow(() -> processable.functional(), "processable.functional() throws exception");
+        assertDoesNotThrow(processable::process, "processable.functional().process() throws exception");
         verify(runnable, times(1)).run();
     }
 
@@ -80,7 +79,7 @@ public class ProcessableTest {
 
     @Test
     void staticCastDoesNotThrowOnProcessableTest() {
-        assertDoesNotThrow(() -> cast(runnable), "Processable.cast unable to create Processable from real Runtime");
+        assertDoesNotThrow(() -> cast(runnable), "Processable.functional unable to create Processable from real Runtime");
     }
 
     @Test
