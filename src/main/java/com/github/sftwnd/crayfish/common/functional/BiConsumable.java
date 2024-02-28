@@ -142,7 +142,7 @@ public interface BiConsumable <T, U> extends BiConsumer<T, U> {
      * @param completableFuture связываемая CompletableFuture
      * @return Consumer для вызова функции
      */
-    default @NonNull BiConsumable<T, U> completable(@NonNull CompletableFuture<Void> completableFuture) {
+    default @NonNull BiConsumable<T, U> completable(@NonNull CompletableFuture<?> completableFuture) {
         Objects.requireNonNull(completableFuture, "BiConsumable::completable - completableFuture is null");
         return (left, right) -> {
             try {

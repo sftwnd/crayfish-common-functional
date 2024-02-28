@@ -112,7 +112,7 @@ public interface Consumable<T> extends Consumer<T> {
      * @param completableFuture связываемая CompletableFuture
      * @return Consumer для вызова функции
      */
-    default @NonNull Consumable<T> completable(@NonNull CompletableFuture<Void> completableFuture) {
+    default @NonNull Consumable<T> completable(@NonNull CompletableFuture<?> completableFuture) {
         Objects.requireNonNull(completableFuture, "Consumable::completable - completableFuture is null");
         return parameter -> {
             try {

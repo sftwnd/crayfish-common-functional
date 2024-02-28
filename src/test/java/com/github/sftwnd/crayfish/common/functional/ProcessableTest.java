@@ -16,6 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -30,7 +31,7 @@ class ProcessableTest {
     @Test
     void processThrowsTest() {
         assertThrows(IllegalStateException.class, processable(() -> { throw new IllegalStateException(); })::process, "processable.process() has to throws right exception");
-        verify(runnable, times(0)).run();
+        verify(runnable, never()).run();
     }
 
     @Test
@@ -122,6 +123,14 @@ class ProcessableTest {
         } catch (ExecutionException eex) {
             assertEquals(IllegalStateException.class, eex.getCause().getClass(), "CompletableFuture has to be completed exceptionally: IllegalStateException");
         }
+    }
+
+    @Test
+    void completableOnCompletedFutureTest() {
+        CompletableFuture<Object> completableFuture = new CompletableFuture<>();
+        completableFuture.complete(null);
+        this.processable.completable(completableFuture).run();
+        verify(this.runnable, never()).run();
     }
 
     @BeforeEach

@@ -1,9 +1,8 @@
 package com.github.sftwnd.crayfish.common.functional;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
-import java.io.File;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
@@ -18,6 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -26,14 +26,12 @@ class SupplyableTest {
 
     @Test
     void getResultTest() {
-        Object value = new Object();
-        assertSame(value, supplyable(() -> value).get(), "Supplyable.processable.get return wrong result");
+        assertSame(result, supplyable(this.supplier::get).get(), "Supplyable.processable.get return wrong result");
     }
 
     @Test
     void getDoesNotThrowTest() {
-        Object value = new Object();
-        assertDoesNotThrow(supplyable(() -> value)::get, "Supplyable.get hasn't got to throw exception");
+        assertDoesNotThrow(supplyable(this.supplier::get)::get, "Supplyable.get hasn't got to throw exception");
     }
 
     @Test
@@ -44,14 +42,12 @@ class SupplyableTest {
 
     @Test
     void callResultTest() throws Exception {
-        Object value = new Object();
-        assertSame(value, supplyable(() -> value).call(), "Supplyable.processable.call return wrong result");
+        assertSame(result, supplyable(this.supplier::get).call(), "Supplyable.processable.call return wrong result");
     }
 
     @Test
     void callDoesNotThrowTest() {
-        Object value = new Object();
-        assertDoesNotThrow(supplyable(() -> value)::call, "Supplyable.call hasn't got to throw exception");
+        assertDoesNotThrow(supplyable(this.supplier::get)::call, "Supplyable.call hasn't got to throw exception");
     }
 
     @Test
@@ -67,31 +63,25 @@ class SupplyableTest {
 
     @Test
     void processableNotNullTest() {
-        assertNotNull(supplyable(Object::new).processable(), "Supplyable.processable hasn't got to return null");
+        assertNotNull(supplyable(this.supplier::get).processable(), "Supplyable.processable hasn't got to return null");
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     void processableTest() {
-        Supplier<Object> supplier = Mockito.mock(Supplier.class);
-        Supplyable<Object> supplyable = supplyable(supplier::get);
+        var supplyable = supplyable(this.supplier::get);
         assertDoesNotThrow(() -> supplyable.processable().run(), "Supplyable.processable.get() hasn't got to throw exception");
         verify(supplier, times(1)).get();
     }
 
     @Test
     void staticSupplyableDoesNotThrowOnSupplierTest() {
-        assertDoesNotThrow(() -> supplyable(Object::new), "Supplyable.supplyable unable to create Supplyable from real Supplier");
+        assertDoesNotThrow(() -> supplyable(this.supplier::get), "Supplyable.supplyable unable to create Supplyable from real Supplier");
     }
 
     @Test
     void staticSupplyableCallSupplierMethodTest() {
-        String somePath = "somePath";
-        File file = mock(File.class);
-        when(file.getAbsolutePath()).thenReturn(somePath);
-        Supplyable<String> supplyable = supplyable(file::getAbsolutePath);
-        assertSame(somePath, supplyable.get(), "Supplyable.get() has to return same value as supplied method");
-        verify(file, times(1)).getAbsolutePath();
+        assertSame(result, supplyable(this.supplier::get), "Supplyable.get() has to return same value as supplied method");
+        verify(this.supplier, times(1)).get();
     }
 
     @Test
@@ -101,12 +91,9 @@ class SupplyableTest {
 
     @Test
     void staticCastCallSupplierMethodTest() {
-        Object value = new Object();
-        @SuppressWarnings("unchecked")
-        Supplier<Object> supplier = mock(Supplier.class);
-        when(supplier.get()).thenReturn(value);
-        Supplyable<?> supplyable = cast(supplier);
-        assertSame(value, supplyable.get(), "Supplyable.get() has to return same value with Supplier.get()");
+        assertDoesNotThrow(() -> cast(this.supplier), "Supplyable.case throws Exception on non null method");
+        assertNotNull(cast(this.supplier), "Supplyable.case return null value");
+        assertSame(result, cast(this.supplier).get(), "Supplyable.cas.get() has to return same value with Supplier.get()");
         verify(supplier, times(1)).get();
     }
 
@@ -141,5 +128,24 @@ class SupplyableTest {
             assertEquals(IllegalStateException.class, eex.getCause().getClass(), "CompletableFuture has to be completed exceptionally: IllegalStateException");
         }
     }
+
+    @Test
+    void completableOnCompletedFutureTest() {
+        var completableFuture = new CompletableFuture<>();
+        completableFuture.complete(null);
+        supplyable(this.supplier::get).completable(completableFuture).run();
+        verify(this.supplier, never()).get();
+    }
+
+    @BeforeEach
+    @SuppressWarnings("unchecked")
+    void startUp() {
+        this.result = mock(Object.class);
+        this.supplier = mock(Supplier.class);
+        when(supplier.get()).thenReturn(this.result);
+    }
+
+    private Object result;
+    private Supplier<Object> supplier;
 
 }
