@@ -5,6 +5,7 @@ import lombok.SneakyThrows;
 
 import java.util.Objects;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
 /**
@@ -62,6 +63,26 @@ public interface Supplyable<T> extends Supplier<T>, Callable<T> {
      */
     static @NonNull <T> Supplyable<T> cast(@NonNull Supplier<T> supplier) {
         return Objects.requireNonNull(supplier, "Supplyable::functional - supplyable is null")::get;
+    }
+    
+    /**
+     * Функция связывается с CompletableFuture и возвращает наружу Processable. Используется вызов без результата
+     * и completableFuture заполняется null в случае успешного выполнения, но вот при возникновении исключения мы
+     * complete-им future этим исключением.
+     * @param completableFuture связываемая CompletableFuture
+     * @return Consumer для вызова функции
+     */
+    default @NonNull Processable completable(@NonNull CompletableFuture<? super T> completableFuture) {
+        Objects.requireNonNull(completableFuture, "Supplyable::completable - completableFuture is null");
+        return () -> {
+            try {
+                if (!completableFuture.isDone()) {
+                    completableFuture.complete(this.call());
+                }
+            } catch (Throwable throwable) {
+                completableFuture.completeExceptionally(throwable);
+            }
+        };
     }
 
 }

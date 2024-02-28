@@ -1,18 +1,23 @@
 package com.github.sftwnd.crayfish.common.functional;
 
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 import java.io.File;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 import static com.github.sftwnd.crayfish.common.functional.Supplyable.cast;
 import static com.github.sftwnd.crayfish.common.functional.Supplyable.supplyable;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -66,10 +71,12 @@ class SupplyableTest {
     }
 
     @Test
-    void processableTest() throws Exception {
-        Supplyable<Object> supplyable = spy(new TestSupplyable<>(null));
+    @SuppressWarnings("unchecked")
+    void processableTest() {
+        Supplier<Object> supplier = Mockito.mock(Supplier.class);
+        Supplyable<Object> supplyable = supplyable(supplier::get);
         assertDoesNotThrow(() -> supplyable.processable().run(), "Supplyable.processable.get() hasn't got to throw exception");
-        verify(supplyable, times(1)).call();
+        verify(supplier, times(1)).get();
     }
 
     @Test
@@ -103,18 +110,36 @@ class SupplyableTest {
         verify(supplier, times(1)).get();
     }
 
-    static class TestSupplyable<T> implements Supplyable<T> {
-
-        private final T value;
-
-        public TestSupplyable(T value) {
-            this.value = value;
-        }
-
-        @Override
-        public T call() {
-            return this.value;
-        }
-
+    @Test
+    @SuppressWarnings("unchecked")
+    void completableTest() throws ExecutionException, InterruptedException {
+        var result = mock(Object.class);
+        CountDownLatch cdl = new CountDownLatch(1);
+        CompletableFuture<Object> completableFuture = new CompletableFuture<>();
+        completableFuture.thenAccept(ignore -> cdl.countDown());
+        Supplier<Object> supplier = mock(Supplier.class);
+        when(supplier.get()).thenReturn(result);
+        Processable processable = supplyable(supplier::get).completable(completableFuture);
+        new Thread(processable).start();
+        assertDoesNotThrow(() -> cdl.await(1, TimeUnit.SECONDS), "CompletableFuture is not Done");
+        assertEquals(result, completableFuture.get(), "CompletableFuture has wrong result");
+        verify(supplier, times(1)).get();
     }
+
+    @Test
+    void completableExceptionallyTest() throws InterruptedException {
+        CountDownLatch cdl = new CountDownLatch(1);
+        CompletableFuture<Object> completableFuture = new CompletableFuture<>();
+        completableFuture.thenAccept(ignore -> cdl.countDown());
+        Runnable runnable = supplyable(() -> { throw new IllegalStateException(); }).completable(completableFuture);
+        new Thread(runnable).start();
+        assertDoesNotThrow(() -> cdl.await(1, TimeUnit.SECONDS), "CompletableFuture is not Done");
+        assertThrows(ExecutionException.class, completableFuture::get, "CompletableFuture has to be completed exceptionally");
+        try {
+            completableFuture.get();
+        } catch (ExecutionException eex) {
+            assertEquals(IllegalStateException.class, eex.getCause().getClass(), "CompletableFuture has to be completed exceptionally: IllegalStateException");
+        }
+    }
+
 }
