@@ -80,7 +80,7 @@ class SupplyableTest {
 
     @Test
     void staticSupplyableCallSupplierMethodTest() {
-        assertSame(result, supplyable(this.supplier::get), "Supplyable.get() has to return same value as supplied method");
+        assertSame(result, supplyable(this.supplier::get).get(), "Supplyable.get() has to return same value as supplied method");
         verify(this.supplier, times(1)).get();
     }
 
