@@ -9,7 +9,6 @@ import java.util.function.Consumer;
 
 /**
  * Расширение {@link Consumer}, но метод может бросать исключение.
- * Помимо {@link Consumer} сам {@link Consumable} является {@link Functional}, возвращающим Void
  * @param <T> тип параметра
  * Used sonar warnings:
  *      java:S112   Generic exceptions should never be thrown
