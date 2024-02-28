@@ -104,6 +104,7 @@ public interface TreFunctional<T, U, V, R> {
      * @return {@link TreFunctional} обёртка
      * @param <T> параметр первого аргумента функции
      * @param <U> параметр второго аргумента функции
+     * @param <V> параметр третьего аргумента функции
      * @param <R> параметр результата функции
      */
     static <T, U, V, R> @NonNull TreFunctional<T, U, V, R> trefunctional(@NonNull TreFunctional<T, U, V, R> trefunctional) {

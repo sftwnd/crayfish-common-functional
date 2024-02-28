@@ -18,7 +18,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -137,6 +139,14 @@ class BiFunctionalTest {
         } catch (ExecutionException eex) {
             assertEquals(IllegalStateException.class, eex.getCause().getClass(), "CompletableFuture has to be completed exceptionally: IllegalStateException");
         }
+    }
+
+    @Test
+    void completableOnCompletedFutureTest() {
+        var completableFuture = new CompletableFuture<>();
+        completableFuture.complete(null);
+        bifunctional(this.bifunction::apply).completable(completableFuture).accept(left, right);
+        verify(this.bifunction, never()).apply(any(), any());
     }
 
     @BeforeEach

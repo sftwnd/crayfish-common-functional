@@ -14,7 +14,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -139,6 +141,14 @@ class TreConsumableTest {
         } catch (ExecutionException eex) {
             assertEquals(IllegalStateException.class, eex.getCause().getClass(), "CompletableFuture has to be completed exceptionally: IllegalStateException");
         }
+    }
+
+    @Test
+    void completableOnCompletedFutureTest() {
+        var completableFuture = new CompletableFuture<>();
+        completableFuture.complete(null);
+        treconsumable(this.treconsumer::accept).completable(completableFuture).accept(left, middle, right);
+        verify(this.treconsumer, never()).accept(any(), any(), any());
     }
 
     @Test

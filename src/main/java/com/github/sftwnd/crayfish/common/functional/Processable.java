@@ -93,7 +93,7 @@ public interface Processable extends Runnable {
      * @param completableFuture связываемая CompletableFuture
      * @return Consumer для вызова функции
      */
-    default @NonNull Processable completable(@NonNull CompletableFuture<Void> completableFuture) {
+    default @NonNull Processable completable(@NonNull CompletableFuture<?> completableFuture) {
         Objects.requireNonNull(completableFuture, "Processable::completable - completableFuture is null");
         return () -> {
             try {

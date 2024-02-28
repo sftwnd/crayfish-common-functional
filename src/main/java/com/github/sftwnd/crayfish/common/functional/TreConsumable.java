@@ -147,7 +147,7 @@ public interface TreConsumable<T, U, V> {
      * @param completableFuture связываемая CompletableFuture
      * @return Consumer для вызова функции
      */
-    default @NonNull TreConsumable<T, U, V> completable(@NonNull CompletableFuture<Void> completableFuture) {
+    default @NonNull TreConsumable<T, U, V> completable(@NonNull CompletableFuture<?> completableFuture) {
         Objects.requireNonNull(completableFuture, "TreConsumable::completable - completableFuture is null");
         return (left, middle, right) -> {
             try {
