@@ -151,8 +151,8 @@ public interface BiConsumable <T, U> extends BiConsumer<T, U> {
                     this.process(left, right);
                     completableFuture.complete(null);
                 }
-            } catch (Throwable throwable) {
-                completableFuture.completeExceptionally(throwable);
+            } catch (Exception exception) {
+                completableFuture.completeExceptionally(exception);
             }
         };
     }

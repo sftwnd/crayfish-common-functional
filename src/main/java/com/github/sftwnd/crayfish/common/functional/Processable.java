@@ -9,6 +9,7 @@ import java.util.concurrent.CompletableFuture;
 /**
  * Расширение {@link Runnable}, но метод может бросать исключение.
  * Помимо {@link Runnable} сам {@link Processable} является {@link Supplyable}, возвращающий Void
+
  * Used sonar warnings:
  *      java:S112   Generic exceptions should never be thrown
  */
@@ -102,8 +103,8 @@ public interface Processable extends Runnable {
                     this.process();
                     completableFuture.complete(null);
                 }
-            } catch (Throwable throwable) {
-                completableFuture.completeExceptionally(throwable);
+            } catch (Exception exception) {
+                completableFuture.completeExceptionally(exception);
             }
         };
     }

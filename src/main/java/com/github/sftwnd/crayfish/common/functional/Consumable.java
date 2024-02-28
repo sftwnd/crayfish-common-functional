@@ -121,8 +121,8 @@ public interface Consumable<T> extends Consumer<T> {
                     this.process(parameter);
                     completableFuture.complete(null);
                 }
-            } catch (Throwable throwable) {
-                completableFuture.completeExceptionally(throwable);
+            } catch (Exception exception) {
+                completableFuture.completeExceptionally(exception);
             }
         };
     }
