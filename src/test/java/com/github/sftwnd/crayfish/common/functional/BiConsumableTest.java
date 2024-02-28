@@ -16,6 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -127,7 +128,7 @@ class BiConsumableTest {
         completableFuture.thenAccept(ignore -> cdl.countDown());
         BiConsumable<Object, Object> biconsumable = biconsumable(biconsumer::accept).completable(completableFuture);
         new Thread(biconsumable.processable(left, right)).start();
-        assertDoesNotThrow(() -> cdl.await(1, TimeUnit.SECONDS), "CompletableFuture is not Done");
+        assertDoesNotThrow(() -> cdl.await(150, TimeUnit.MILLISECONDS), "CompletableFuture is not Done");
         assertDoesNotThrow(() -> completableFuture.get(), "CompletableFuture was completed exceptionally");
         assertNull(completableFuture.get(), "CompletableFuture has wrong result");
         verify(biconsumer, times(1)).accept(left, right);
@@ -138,9 +139,12 @@ class BiConsumableTest {
         CountDownLatch cdl = new CountDownLatch(1);
         CompletableFuture<Void> completableFuture = new CompletableFuture<>();
         completableFuture.thenAccept(ignore -> cdl.countDown());
-        BiConsumable<Object, Object> biconsumable = biconsumable((ignoreLeft, ignoreRight) -> { throw new IllegalStateException(); }).completable(completableFuture);
+        BiConsumable<Object, Object> biconsumable = biconsumable((ignoreLeft, ignoreRight) -> {
+            try { throw new IllegalStateException(); } finally { cdl.countDown();}
+        }).completable(completableFuture);
         new Thread(biconsumable.processable(left, right)).start();
-        assertDoesNotThrow(() -> cdl.await(1, TimeUnit.SECONDS), "CompletableFuture is not Done");
+        boolean completed = cdl.await(1, TimeUnit.SECONDS);
+        assertTrue(completed, "CompletableFuture is not Done");
         assertThrows(ExecutionException.class, completableFuture::get, "CompletableFuture has to be completed exceptionally");
         try {
             completableFuture.get();
@@ -160,8 +164,8 @@ class BiConsumableTest {
     @BeforeEach
     @SuppressWarnings("unchecked")
     void startUp() {
-        this.left = mock(Object.class);
-        this.right = mock(Object.class);
+        this.left = mock();
+        this.right = mock();
         this.biconsumer = mock(BiConsumer.class);
     }
 
