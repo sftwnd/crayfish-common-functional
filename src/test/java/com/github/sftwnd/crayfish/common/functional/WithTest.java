@@ -75,14 +75,14 @@ class WithTest {
             mock.run();
         };
         verify(wither, never()).value(); // no value() calls
-        assertSame(value, wither.further(runnable::run), "Wither::further returns wrong value");
+        assertSame(value, wither.further(runnable::run), "Wither::furtherRun returns wrong value");
         verify(wither, times(1)).value(); // 1 value() call
         verify(mock, times(1)).run(); // processable was called once
     }
 
     @Test
     void furtherExceptedTest() {
-        assertThrows(IOException.class, () -> wither.further(() -> { throw new IOException(); }), "Wither::further(Excepted) has to throws right Exception");
+        assertThrows(IOException.class, () -> wither.further(() -> { throw new IOException(); }), "Wither::furtherRun(Excepted) has to throws right Exception");
         verify(wither, times(1)).value(); // no value() calls
     }
 

@@ -106,22 +106,32 @@ class TreFunctionalTest {
     }
 
     @Test
-    void furtherProcessableTest() {
+    void furtherRunTest() {
         var runnable = mock(Runnable.class);
         doNothing().when(runnable).run();
         verify(runnable, never()).run();
-        assertSame(this.result, trefunction.further(runnable::run).apply(left, middle, right), "Functional::further(processable) has to return right result");
+        assertSame(this.result, trefunction.furtherRun(runnable::run).apply(left, middle, right), "TreFunctional::furtherRun(processable) has to return right result");
         verify(runnable, times(1)).run();
     }
 
     @Test
     @SuppressWarnings("unchecked")
-    void furtherTest() {
+    void furtherAcceptTest() {
         var consumable = mock(Consumable.class);
         doNothing().when(consumable).accept(any());
         verify(consumable, never()).accept(any());
-        assertSame(this.result, trefunction.further(consumable::accept).apply(left, middle, right), "Functional::further(consumable) has to return right result");
+        assertSame(this.result, trefunction.furtherAccept(consumable::accept).apply(left, middle, right), "TreFunctional::furtherAccept(consumable) has to return right result");
         verify(consumable, times(1)).accept(result);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void furtherApplyTest() {
+        Function<Object, Integer> function = mock(Function.class);
+        when(function.apply(result)).thenReturn(randomValue);
+        verify(function, never()).apply(any());
+        assertSame(randomValue, trefunction.furtherApply(function::apply).apply(left, middle, right), "TreFunctional::andThen(functional) has to return right result");
+        verify(function, times(1)).apply(result);
     }
 
     @Test
@@ -133,7 +143,7 @@ class TreFunctionalTest {
             mock.run();
         };
         verify(mock, never()).run();
-        assertSame(this.result, trefunction.previously(runnable::run).apply(left, middle, right), "Functional::previously has to return right result");
+        assertSame(this.result, trefunction.previously(runnable::run).apply(left, middle, right), "TreFunctional::previously has to return right result");
         verify(mock, times(1)).run();
     }
 
@@ -141,10 +151,10 @@ class TreFunctionalTest {
     void withLeftFunctionalTest() {
         @SuppressWarnings("unchecked")
         Function<Integer, Object> function = mock(Function.class);
-        when(function.apply(random)).thenReturn(left);
+        when(function.apply(randomValue)).thenReturn(left);
         verify(function, never()).apply(any());
-        assertSame(this.result, trefunction.withLeft(function::apply).apply(random, middle, right), "Functional::withLeft(functional) has to return right result");
-        verify(function, times(1)).apply(random);
+        assertSame(this.result, trefunction.withLeft(function::apply).apply(randomValue, middle, right), "TreFunctional::withLeft(functional) has to return right result");
+        verify(function, times(1)).apply(randomValue);
         verify(trefunction, times(1)).apply(left, middle, right);
     }
 
@@ -154,7 +164,7 @@ class TreFunctionalTest {
         Supplier<Object> supplier = mock(Supplier.class);
         when(supplier.get()).thenReturn(left);
         verify(supplier, never()).get();
-        assertSame(this.result, trefunction.withLeft(supplier::get).apply(middle, right), "Functional::withLeft(supplier) has to return right result");
+        assertSame(this.result, trefunction.withLeft(supplier::get).apply(middle, right), "TreFunctional::withLeft(supplier) has to return right result");
         verify(supplier, times(1)).get();
         verify(trefunction, times(1)).apply(left, middle, right);
     }
@@ -163,10 +173,10 @@ class TreFunctionalTest {
     void withMiddleFunctionalTest() {
         @SuppressWarnings("unchecked")
         Function<Integer, Object> function = mock(Function.class);
-        when(function.apply(random)).thenReturn(middle);
+        when(function.apply(randomValue)).thenReturn(middle);
         verify(function, never()).apply(any());
-        assertSame(this.result, trefunction.withMiddle(function::apply).apply(left, random, right), "Functional::withMiddle(functional) has to return right result");
-        verify(function, times(1)).apply(random);
+        assertSame(this.result, trefunction.withMiddle(function::apply).apply(left, randomValue, right), "TreFunctional::withMiddle(functional) has to return right result");
+        verify(function, times(1)).apply(randomValue);
         verify(trefunction, times(1)).apply(left, middle, right);
     }
 
@@ -176,7 +186,7 @@ class TreFunctionalTest {
         Supplier<Object> supplier = mock(Supplier.class);
         when(supplier.get()).thenReturn(middle);
         verify(supplier, never()).get();
-        assertSame(this.result, trefunction.withMiddle(supplier::get).apply(left, right), "Functional::withMiddle(supplier) has to return right result");
+        assertSame(this.result, trefunction.withMiddle(supplier::get).apply(left, right), "TreFunctional::withMiddle(supplier) has to return right result");
         verify(supplier, times(1)).get();
         verify(trefunction, times(1)).apply(left, middle, right);
     }
@@ -185,10 +195,10 @@ class TreFunctionalTest {
     void withRightFunctionalTest() {
         @SuppressWarnings("unchecked")
         Function<Integer, Object> function = mock(Function.class);
-        when(function.apply(random)).thenReturn(right);
+        when(function.apply(randomValue)).thenReturn(right);
         verify(function, never()).apply(any());
-        assertSame(this.result, trefunction.withRight(function::apply).apply(left, middle, random), "Functional::withRight(functional) has to return right result");
-        verify(function, times(1)).apply(random);
+        assertSame(this.result, trefunction.withRight(function::apply).apply(left, middle, randomValue), "TreFunctional::withRight(functional) has to return right result");
+        verify(function, times(1)).apply(randomValue);
         verify(trefunction, times(1)).apply(left, middle, right);
     }
 
@@ -198,7 +208,7 @@ class TreFunctionalTest {
         Supplier<Object> supplier = mock(Supplier.class);
         when(supplier.get()).thenReturn(right);
         verify(supplier, never()).get();
-        assertSame(this.result, trefunction.withRight(supplier::get).apply(left, middle), "Functional::withRight(supplier) has to return right result");
+        assertSame(this.result, trefunction.withRight(supplier::get).apply(left, middle), "TreFunctional::withRight(supplier) has to return right result");
         verify(supplier, times(1)).get();
         verify(trefunction, times(1)).apply(left, middle, right);
     }
@@ -251,16 +261,6 @@ class TreFunctionalTest {
         verify(this.trefunction, never()).apply(any(), any(), any());
     }
 
-    @Test
-    @SuppressWarnings("unchecked")
-    void andThenTest() {
-        Function<Object, Integer> function = mock(Function.class);
-        when(function.apply(result)).thenReturn(random);
-        verify(function, never()).apply(any());
-        assertSame(random, trefunction.andThen(function).apply(left, middle, right), "Functional::andThen(functional) has to return right result");
-        verify(function, times(1)).apply(result);
-    }
-
     @BeforeEach
     void startUp() {
         this.left = mock();
@@ -268,14 +268,15 @@ class TreFunctionalTest {
         this.middle = mock();
         this.result = mock();
         this.trefunction = spy(new TreFunctionalImpl());
-        this.random = new Random().nextInt();
+        this.randomValue = random.nextInt();
     }
 
+    private static final Random random = new Random();
     private Object left;
     private Object middle;
     private Object right;
     private Object result;
-    private Integer random;
+    private Integer randomValue;
     private TreFunctional<Object, Object, Object, Object> trefunction;
 
     class TreFunctionalImpl implements TreFunctional<Object, Object, Object, Object> {

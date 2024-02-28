@@ -5,7 +5,6 @@ import lombok.SneakyThrows;
 
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Function;
 
 import static com.github.sftwnd.crayfish.common.functional.With.with;
 
@@ -105,7 +104,7 @@ public interface TreFunctional<T, U, V, R> {
      * @param processable исполняемый код после вычисления результата
      * @return обогащённый TreFunctional
      */
-    default @NonNull TreFunctional<T, U, V, R> further(@NonNull Processable processable) {
+    default @NonNull TreFunctional<T, U, V, R> furtherRun(@NonNull Processable processable) {
         return (left, middle, right) -> with(() -> apply(left, middle, right)).further(processable);
     }
 
@@ -114,8 +113,19 @@ public interface TreFunctional<T, U, V, R> {
      * @param consumable исполняемый код после вычисления результата, использующий вычисленное значение
      * @return обогащённый TreFunctional
      */
-    default @NonNull TreFunctional<T, U, V, R> further(@NonNull Consumable<? super R> consumable) {
+    default @NonNull TreFunctional<T, U, V, R> furtherAccept(@NonNull Consumable<? super R> consumable) {
         return (left, middle, right) -> with(() -> apply(left, middle, right)).consume(consumable);
+    }
+
+    /**
+     * Выполнение кода после вычисления результата с его трансформацией заданной функцией
+     * @param functional исполняемый код после вычисления результата для его преобразования
+     * @return обогащённый TreFunctional
+     * @param <S> тип результата итоговой функции
+     */
+    default <S> @NonNull TreFunctional<T, U, V, S> furtherApply(@NonNull Functional<? super R, ? extends S> functional) {
+        Objects.requireNonNull(functional, "Functional::furtherApply - functional is null");
+        return (left, middle, right) -> functional.apply(this.apply(left, middle, right));
     }
 
     /**
@@ -216,24 +226,6 @@ public interface TreFunctional<T, U, V, R> {
                 completableFuture.completeExceptionally(exception);
             }
         };
-    }
-
-    /**
-     * Returns a composed function that first applies this function to
-     * its input, and then applies the {@code after} function to the result.
-     * If evaluation of either function throws an exception, it is relayed to
-     * the caller of the composed function.
-     *
-     * @param <X> the type of output of the {@code after} function, and of the
-     *           composed function
-     * @param after the function to apply after this function is applied
-     * @return a composed function that first applies this function and then
-     * applies the {@code after} function
-     * @throws NullPointerException if after is null
-     */
-    default <X> @NonNull TreFunctional<T, U, V, X> andThen(@NonNull Function<? super R, ? extends X> after) {
-        Objects.requireNonNull(after, "TreFunctional::andThen - after is null");
-        return (T t, U u, V v) -> after.apply(apply(t, u, v));
     }
 
 }

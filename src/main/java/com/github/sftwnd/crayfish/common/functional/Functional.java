@@ -7,6 +7,8 @@ import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
+import static com.github.sftwnd.crayfish.common.functional.With.with;
+
 /**
  * Расширение {@link Function}, но метод может бросать исключение.
  * @param <T> тип параметра
@@ -60,6 +62,63 @@ public interface Functional<T, R> extends Function<T, R> {
      */
     default @NonNull Processable processable(T parameter) {
         return () -> execute(parameter);
+    }
+
+    /**
+     * Выполнение кода после вычисления результата, но до его выдачи
+     * @param processable исполняемый код после вычисления результата
+     * @return обогащённый Functional
+     */
+    default @NonNull Functional<T, R> furtherRun(@NonNull Processable processable) {
+        return parameter -> with(this.supplyable(parameter)).further(processable);
+    }
+
+    /**
+     * Выполнение кода после вычисления результата, но до его выдачи
+     * @param consumable исполняемый код после вычисления результата, использующий вычисленное значение
+     * @return обогащённый Functional
+     */
+    default @NonNull Functional<T, R> furtherAccept(@NonNull Consumable<? super R> consumable) {
+        return parameter -> with(this.supplyable(parameter)).consume(consumable);
+    }
+
+    /**
+     * Выполнение кода после вычисления результата с его трансформацией заданной функцией
+     * @param functional исполняемый код после вычисления результата для его преобразования
+     * @return обогащённый Functional
+     * @param <S> тип результата итоговой функции
+     */
+    default <S> @NonNull Functional<T, S> furtherApply(@NonNull Functional<? super R, ? extends S> functional) {
+        Objects.requireNonNull(functional, "Functional::furtherApply - functional is null");
+        return parameter -> functional.apply(this.apply(parameter));
+    }
+
+    /**
+     * Выполнение кода перед вычислением результата функции
+     * @param processable исполняемый код перед вычислением результата
+     * @return обогащённый Functional
+     */
+    default @NonNull Functional<T, R> previously(@NonNull Processable processable) {
+        return parameter -> with(this.supplyable(parameter)).primarily(processable);
+    }
+
+    /**
+     * Выполнение кода перед вычислением результата функции для формирования параметра
+     * @param functional исполняемый код вычисления первого параметра
+     * @return обогащённый Functional
+     * @param <L> тип аргумента для вычисления левого параметра функции
+     */
+    default @NonNull <L> Functional<L,R> withParam(@NonNull Functional<? super L, ? extends T> functional) {
+        return parameter -> with(functional.supplyable(parameter)).transform(this::apply);
+    }
+
+    /**
+     * Выполнение кода перед вычислением результата функции для формирования параметра
+     * @param supplyable исполняемый код вычисления первого параметра
+     * @return обогащённый Supplyable
+     */
+    default @NonNull Supplyable<R> withParam(@NonNull Supplyable<? extends T> supplyable) {
+        return () -> with(supplyable).transform(this::apply);
     }
 
     /**
