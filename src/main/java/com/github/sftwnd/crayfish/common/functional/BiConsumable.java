@@ -10,7 +10,6 @@ import java.util.function.BiConsumer;
 
 /**
  * Расширение {@link BiConsumer}, но метод может бросать исключение.
- * Помимо {@link BiConsumer} сам {@link BiConsumable} является {@link BiFunctional}, возвращающим Void
  * @param <T> тип первого параметра
  * @param <U> тип второго параметра
  * Used sonar warnings:
