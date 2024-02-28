@@ -5,6 +5,7 @@ import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.SneakyThrows;
 
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
 
 /**
@@ -133,6 +134,27 @@ public interface BiConsumable <T, U> extends BiConsumer<T, U> {
      */
     static @NonNull <T, U> BiConsumable<T, U> cast(@NonNull BiConsumer<T, U> biconsumer) {
         return Objects.requireNonNull(biconsumer, "BiConsumable::functional - biconsumer is null")::accept;
+    }
+
+    /**
+     * Функция связывается с CompletableFuture и возвращает наружу BiConsumable. Используется вызов без результата
+     * и completableFuture заполняется null в случае успешного выполнения, но вот при возникновении исключения мы
+     * complete-им future этим исключением.
+     * @param completableFuture связываемая CompletableFuture
+     * @return Consumer для вызова функции
+     */
+    default @NonNull BiConsumable<T, U> completable(@NonNull CompletableFuture<Void> completableFuture) {
+        Objects.requireNonNull(completableFuture, "BiConsumable::completable - completableFuture is null");
+        return (left, right) -> {
+            try {
+                if (!completableFuture.isDone()) {
+                    this.process(left, right);
+                    completableFuture.complete(null);
+                }
+            } catch (Throwable throwable) {
+                completableFuture.completeExceptionally(throwable);
+            }
+        };
     }
 
 }

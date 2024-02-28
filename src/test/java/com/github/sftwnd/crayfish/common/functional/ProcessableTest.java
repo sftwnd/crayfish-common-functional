@@ -4,9 +4,15 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+
 import static com.github.sftwnd.crayfish.common.functional.Processable.cast;
 import static com.github.sftwnd.crayfish.common.functional.Processable.processable;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
@@ -87,6 +93,35 @@ class ProcessableTest {
         Processable processable = cast(runnable);
         assertDoesNotThrow(processable::process, "Processable.process() has throw an exception");
         verify(runnable, times(1)).run();
+    }
+
+    @Test
+    void completableTest() throws ExecutionException, InterruptedException {
+        CountDownLatch cdl = new CountDownLatch(1);
+        CompletableFuture<Void> completableFuture = new CompletableFuture<>();
+        completableFuture.thenAccept(ignore -> cdl.countDown());
+        Processable processable = processable(runnable::run).completable(completableFuture);
+        new Thread(processable).start();
+        assertDoesNotThrow(() -> cdl.await(1, TimeUnit.SECONDS), "CompletableFuture is not Done");
+        assertDoesNotThrow(() -> completableFuture.get(), "CompletableFuture was completed exceptionally");
+        assertNull(completableFuture.get(), "CompletableFuture has wrong result");
+        verify(runnable, times(1)).run();
+    }
+
+    @Test
+    void completableExceptionallyTest() throws InterruptedException {
+        CountDownLatch cdl = new CountDownLatch(1);
+        CompletableFuture<Void> completableFuture = new CompletableFuture<>();
+        completableFuture.thenAccept(ignore -> cdl.countDown());
+        Runnable runnable = processable(() -> { throw new IllegalStateException(); }).completable(completableFuture);
+        new Thread(runnable).start();
+        assertDoesNotThrow(() -> cdl.await(1, TimeUnit.SECONDS), "CompletableFuture is not Done");
+        assertThrows(ExecutionException.class, completableFuture::get, "CompletableFuture has to be completed exceptionally");
+        try {
+            completableFuture.get();
+        } catch (ExecutionException eex) {
+            assertEquals(IllegalStateException.class, eex.getCause().getClass(), "CompletableFuture has to be completed exceptionally: IllegalStateException");
+        }
     }
 
     @BeforeEach

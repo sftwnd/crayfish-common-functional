@@ -54,6 +54,8 @@
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <sonar.organization>sftwnd-github</sonar.organization>
+        <sonar.host.url>https://sonarcloud.io</sonar.host.url>
         <spotbugs-annotations.version>4.8.3</spotbugs-annotations.version>
         <lombok.version>1.18.30</lombok.version>
         <junit.version>5.10.2</junit.version>
