@@ -4,10 +4,12 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import lombok.SneakyThrows;
 
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Расширение {@link Runnable}, но метод может бросать исключение.
  * Помимо {@link Runnable} сам {@link Processable} является {@link Supplyable}, возвращающий Void
+
  * Used sonar warnings:
  *      java:S112   Generic exceptions should never be thrown
  */
@@ -84,6 +86,27 @@ public interface Processable extends Runnable {
      */
     static @NonNull Processable cast(@NonNull Runnable runnable) {
         return Objects.requireNonNull(runnable, "Runnable::cast - runnable is null")::run;
+    }
+    
+    /**
+     * Функция связывается с CompletableFuture и возвращает наружу Processable. Используется вызов без результата
+     * и completableFuture заполняется null в случае успешного выполнения, но вот при возникновении исключения мы
+     * complete-им future этим исключением.
+     * @param completableFuture связываемая CompletableFuture
+     * @return Consumer для вызова функции
+     */
+    default @NonNull Processable completable(@NonNull CompletableFuture<Void> completableFuture) {
+        Objects.requireNonNull(completableFuture, "Processable::completable - completableFuture is null");
+        return () -> {
+            try {
+                if (!completableFuture.isDone()) {
+                    this.process();
+                    completableFuture.complete(null);
+                }
+            } catch (Exception exception) {
+                completableFuture.completeExceptionally(exception);
+            }
+        };
     }
 
 }

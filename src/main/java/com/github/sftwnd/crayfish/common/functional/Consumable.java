@@ -4,6 +4,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import lombok.SneakyThrows;
 
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 /**
@@ -104,5 +105,25 @@ public interface Consumable<T> extends Consumer<T> {
     static @NonNull <T> Consumable<T> cast(@NonNull Consumer<T> consumer) {
         return Objects.requireNonNull(consumer, "Consumable::functional - consumer is null")::accept;
     }
-
+    
+    /**
+     * Функция связывается с CompletableFuture и возвращает наружу Consumable. Используется вызов без результата
+     * и completableFuture заполняется null в случае успешного выполнения, но вот при возникновении исключения мы
+     * complete-им future этим исключением.
+     * @param completableFuture связываемая CompletableFuture
+     * @return Consumer для вызова функции
+     */
+    default @NonNull Consumable<T> completable(@NonNull CompletableFuture<Void> completableFuture) {
+        Objects.requireNonNull(completableFuture, "Consumable::completable - completableFuture is null");
+        return parameter -> {
+            try {
+                if (!completableFuture.isDone()) {
+                    this.process(parameter);
+                    completableFuture.complete(null);
+                }
+            } catch (Exception exception) {
+                completableFuture.completeExceptionally(exception);
+            }
+        };
+    }
 }

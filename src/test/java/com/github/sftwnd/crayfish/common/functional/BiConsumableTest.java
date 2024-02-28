@@ -3,13 +3,19 @@ package com.github.sftwnd.crayfish.common.functional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 
 import static com.github.sftwnd.crayfish.common.functional.BiConsumable.biconsumable;
 import static com.github.sftwnd.crayfish.common.functional.BiConsumable.cast;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -110,7 +116,36 @@ class BiConsumableTest {
         assertDoesNotThrow(() -> biconsumable(biconsumer::accept).accept(left, right), "BiBiConsumable.biconsumable.accept throws Exception");
         verify(biconsumer, times(1)).accept(left, right);
     }
-    
+
+
+    @Test
+    void completableTest() throws ExecutionException, InterruptedException {
+        CountDownLatch cdl = new CountDownLatch(1);
+        CompletableFuture<Void> completableFuture = new CompletableFuture<>();
+        completableFuture.thenAccept(ignore -> cdl.countDown());
+        BiConsumable<Object, Object> biconsumable = biconsumable(biconsumer::accept).completable(completableFuture);
+        new Thread(biconsumable.processable(left, right)).start();
+        assertDoesNotThrow(() -> cdl.await(1, TimeUnit.SECONDS), "CompletableFuture is not Done");
+        assertDoesNotThrow(() -> completableFuture.get(), "CompletableFuture was completed exceptionally");
+        assertNull(completableFuture.get(), "CompletableFuture has wrong result");
+        verify(biconsumer, times(1)).accept(left, right);
+    }
+
+    @Test
+    void completableExceptionallyTest() throws InterruptedException {
+        CountDownLatch cdl = new CountDownLatch(1);
+        CompletableFuture<Void> completableFuture = new CompletableFuture<>();
+        completableFuture.thenAccept(ignore -> cdl.countDown());
+        BiConsumable<Object, Object> biconsumable = biconsumable((ignoreLeft, ignoreRight) -> { throw new IllegalStateException(); }).completable(completableFuture);
+        new Thread(biconsumable.processable(left, right)).start();
+        assertDoesNotThrow(() -> cdl.await(1, TimeUnit.SECONDS), "CompletableFuture is not Done");
+        assertThrows(ExecutionException.class, completableFuture::get, "CompletableFuture has to be completed exceptionally");
+        try {
+            completableFuture.get();
+        } catch (ExecutionException eex) {
+            assertEquals(IllegalStateException.class, eex.getCause().getClass(), "CompletableFuture has to be completed exceptionally: IllegalStateException");
+        }
+    }
     @BeforeEach
     @SuppressWarnings("unchecked")
     void startUp() {
