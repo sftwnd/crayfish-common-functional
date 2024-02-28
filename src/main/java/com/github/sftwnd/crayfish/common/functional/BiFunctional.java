@@ -7,6 +7,8 @@ import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiFunction;
 
+import static com.github.sftwnd.crayfish.common.functional.With.with;
+
 /**
  * Расширение {@link BiFunctional}, но метод может бросать исключение.
  * @param <T> тип первого параметра
@@ -83,6 +85,83 @@ public interface BiFunctional<T, U, R> extends BiFunction<T, U, R> {
      */
     default @NonNull Processable processable(T left, U right) {
         return () -> execute(left, right);
+    }
+
+    /**
+     * Выполнение кода после вычисления результата, но до его выдачи
+     * @param processable исполняемый код после вычисления результата
+     * @return обогащённый BiFunctional
+     */
+    default @NonNull BiFunctional<T, U, R> furtherRun(@NonNull Processable processable) {
+        return (left, right) -> with(() -> apply(left, right)).further(processable);
+    }
+
+    /**
+     * Выполнение кода после вычисления результата, но до его выдачи
+     * @param consumable исполняемый код после вычисления результата, использующий вычисленное значение
+     * @return обогащённый BiFunctional
+     */
+    default @NonNull BiFunctional<T, U, R> furtherAccept(@NonNull Consumable<? super R> consumable) {
+        return (left, right) -> with(() -> apply(left, right)).consume(consumable);
+    }
+
+    /**
+     * Выполнение кода после вычисления результата с его трансформацией заданной функцией
+     * @param functional исполняемый код после вычисления результата для его преобразования
+     * @return обогащённый BiFunctional
+     * @param <S> тип результата итоговой функции
+     */
+    default <S> @NonNull BiFunctional<T, U, S> furtherApply(@NonNull Functional<? super R, ? extends S> functional) {
+        Objects.requireNonNull(functional, "Functional::furtherApply - functional is null");
+        return (left, right) -> functional.apply(this.apply(left, right));
+    }
+
+    /**
+     * Выполнение кода перед вычислением результата функции
+     * @param processable исполняемый код перед вычислением результата
+     * @return обогащённый BiFunctional
+     */
+    default @NonNull BiFunctional<T, U, R> previously(@NonNull Processable processable) {
+        return (left, right) -> with(BiFunctional.this.supplyable(left, right)).primarily(processable);
+    }
+
+    /**
+     * Выполнение кода перед вычислением результата функции для формирования первого параметра
+     * @param functional исполняемый код вычисления первого параметра
+     * @return обогащённый BiFunctional
+     * @param <L> тип аргумента для вычисления левого параметра функции
+     */
+    default @NonNull <L> BiFunctional<L, U, R> withLeft(@NonNull Functional<? super L, ? extends T> functional) {
+        return (left, right) -> with(functional.supplyable(left)).transform(x -> apply(x, right));
+    }
+
+    /**
+     * Выполнение кода перед вычислением результата функции для формирования первого параметра
+     * @param supplyable исполняемый код вычисления первого параметра
+     * @return обогащённый BiFunctional
+     */
+    default @NonNull Functional<U, R> withLeft(@NonNull Supplyable<? extends T> supplyable) {
+        return right -> with(supplyable).transform(left -> apply(left, right));
+    }
+
+    /**
+     * Выполнение кода перед вычислением результата функции для формирования второго параметра
+     * @param functional исполняемый код вычисления второго параметра
+     * @return обогащённый BiFunctional
+     * @param <H> тип аргумента для вычисления правого параметра функции
+     */
+    default @NonNull <H> BiFunctional<T, H, R> withRight(@NonNull Functional<? super H, ? extends U> functional) {
+        return (left, right) -> with(functional.supplyable(right)).transform(x -> apply(left, x));
+    }
+
+    /**
+     * Выполнение кода перед вычислением результата функции для формирования второго параметра
+     * @param supplyable исполняемый код вычисления второго параметра
+     * @return обогащённый BiFunctional
+     */
+    default @NonNull Functional<T, R> withRight(@NonNull Supplyable<? extends U> supplyable) {
+        Objects.requireNonNull(supplyable, "BiFunctional::withRight - supplyable is null");
+        return left -> with(supplyable).transform(right -> apply(left, right));
     }
 
     /**
