@@ -98,8 +98,8 @@ public interface Functional<T, R> extends Function<T, R> {
                 if (!completableFuture.isDone()) {
                     completableFuture.complete(this.execute(parameter));
                 }
-            } catch (Throwable throwable) {
-                completableFuture.completeExceptionally(throwable);
+            } catch (Exception exception) {
+                completableFuture.completeExceptionally(exception);
             }
         };
     }

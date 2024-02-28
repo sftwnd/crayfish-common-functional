@@ -123,8 +123,8 @@ public interface BiFunctional<T, U, R> extends BiFunction<T, U, R> {
                 if (!completableFuture.isDone()) {
                     completableFuture.complete(this.execute(left, right));
                 }
-            } catch (Throwable throwable) {
-                completableFuture.completeExceptionally(throwable);
+            } catch (Exception exception) {
+                completableFuture.completeExceptionally(exception);
             }
         };
     }

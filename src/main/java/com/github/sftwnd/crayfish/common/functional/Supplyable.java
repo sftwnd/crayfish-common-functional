@@ -79,8 +79,8 @@ public interface Supplyable<T> extends Supplier<T>, Callable<T> {
                 if (!completableFuture.isDone()) {
                     completableFuture.complete(this.call());
                 }
-            } catch (Throwable throwable) {
-                completableFuture.completeExceptionally(throwable);
+            } catch (Exception exception) {
+                completableFuture.completeExceptionally(exception);
             }
         };
     }
