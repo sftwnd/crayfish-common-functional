@@ -4,11 +4,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import static com.github.sftwnd.crayfish.common.functional.TreFunctional.trefunctional;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -17,9 +19,12 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -101,6 +106,104 @@ class TreFunctionalTest {
     }
 
     @Test
+    void furtherProcessableTest() {
+        var runnable = mock(Runnable.class);
+        doNothing().when(runnable).run();
+        verify(runnable, never()).run();
+        assertSame(this.result, trefunction.further(runnable::run).apply(left, middle, right), "Functional::further(processable) has to return right result");
+        verify(runnable, times(1)).run();
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void furtherTest() {
+        var consumable = mock(Consumable.class);
+        doNothing().when(consumable).accept(any());
+        verify(consumable, never()).accept(any());
+        assertSame(this.result, trefunction.further(consumable::accept).apply(left, middle, right), "Functional::further(consumable) has to return right result");
+        verify(consumable, times(1)).accept(result);
+    }
+
+    @Test
+    void previouslyTest() {
+        var mock = mock(Runnable.class);
+        doNothing().when(mock).run();
+        Runnable runnable = () -> {
+            verify(this.trefunction, never()).apply(any(), any(), any());
+            mock.run();
+        };
+        verify(mock, never()).run();
+        assertSame(this.result, trefunction.previously(runnable::run).apply(left, middle, right), "Functional::previously has to return right result");
+        verify(mock, times(1)).run();
+    }
+
+    @Test
+    void withLeftFunctionalTest() {
+        @SuppressWarnings("unchecked")
+        Function<Integer, Object> function = mock(Function.class);
+        when(function.apply(random)).thenReturn(left);
+        verify(function, never()).apply(any());
+        assertSame(this.result, trefunction.withLeft(function::apply).apply(random, middle, right), "Functional::withLeft(functional) has to return right result");
+        verify(function, times(1)).apply(random);
+        verify(trefunction, times(1)).apply(left, middle, right);
+    }
+
+    @Test
+    void withLeftSupplyableTest() {
+        @SuppressWarnings("unchecked")
+        Supplier<Object> supplier = mock(Supplier.class);
+        when(supplier.get()).thenReturn(left);
+        verify(supplier, never()).get();
+        assertSame(this.result, trefunction.withLeft(supplier::get).apply(middle, right), "Functional::withLeft(supplier) has to return right result");
+        verify(supplier, times(1)).get();
+        verify(trefunction, times(1)).apply(left, middle, right);
+    }
+
+    @Test
+    void withMiddleFunctionalTest() {
+        @SuppressWarnings("unchecked")
+        Function<Integer, Object> function = mock(Function.class);
+        when(function.apply(random)).thenReturn(middle);
+        verify(function, never()).apply(any());
+        assertSame(this.result, trefunction.withMiddle(function::apply).apply(left, random, right), "Functional::withMiddle(functional) has to return right result");
+        verify(function, times(1)).apply(random);
+        verify(trefunction, times(1)).apply(left, middle, right);
+    }
+
+    @Test
+    void withMiddleSupplyableTest() {
+        @SuppressWarnings("unchecked")
+        Supplier<Object> supplier = mock(Supplier.class);
+        when(supplier.get()).thenReturn(middle);
+        verify(supplier, never()).get();
+        assertSame(this.result, trefunction.withMiddle(supplier::get).apply(left, right), "Functional::withMiddle(supplier) has to return right result");
+        verify(supplier, times(1)).get();
+        verify(trefunction, times(1)).apply(left, middle, right);
+    }
+
+    @Test
+    void withRightFunctionalTest() {
+        @SuppressWarnings("unchecked")
+        Function<Integer, Object> function = mock(Function.class);
+        when(function.apply(random)).thenReturn(right);
+        verify(function, never()).apply(any());
+        assertSame(this.result, trefunction.withRight(function::apply).apply(left, middle, random), "Functional::withRight(functional) has to return right result");
+        verify(function, times(1)).apply(random);
+        verify(trefunction, times(1)).apply(left, middle, right);
+    }
+
+    @Test
+    void withRightSupplyableTest() {
+        @SuppressWarnings("unchecked")
+        Supplier<Object> supplier = mock(Supplier.class);
+        when(supplier.get()).thenReturn(right);
+        verify(supplier, never()).get();
+        assertSame(this.result, trefunction.withRight(supplier::get).apply(left, middle), "Functional::withRight(supplier) has to return right result");
+        verify(supplier, times(1)).get();
+        verify(trefunction, times(1)).apply(left, middle, right);
+    }
+
+    @Test
     void staticTreFunctionalTest() {
         assertDoesNotThrow(() -> trefunctional(trefunction::apply), "TreFunctional.trefunctional unable to create TreFunctional from real TreFunctional method");
         assertNotNull(trefunctional(trefunction::apply), "TreFunctional.trefunctional return null");
@@ -116,7 +219,7 @@ class TreFunctionalTest {
         completableFuture.thenAccept(ignore -> cdl.countDown());
         TreConsumable<Object, Object, Object> consumable = trefunctional(trefunction::apply).completable(completableFuture);
         new Thread(consumable.processable(left, middle, right)).start();
-        assertDoesNotThrow(() -> cdl.await(1, TimeUnit.SECONDS), "CompletableFuture is not Done");
+        assertDoesNotThrow(() -> cdl.await(150, TimeUnit.MILLISECONDS), "CompletableFuture is not Done");
         assertEquals(result, completableFuture.get(), "CompletableFuture has wrong result");
         verify(trefunction, times(1)).apply(left, middle, right);
     }
@@ -126,9 +229,12 @@ class TreFunctionalTest {
         CountDownLatch cdl = new CountDownLatch(1);
         CompletableFuture<Object> completableFuture = new CompletableFuture<>();
         completableFuture.thenAccept(ignore -> cdl.countDown());
-        TreConsumable<Object, Object, Object> consumable = trefunctional((ignoreLeft, ignoreMiddle, ignoreRight) -> { throw new IllegalStateException(); }).completable(completableFuture);
+        TreConsumable<Object, Object, Object> consumable = trefunctional((ignoreLeft, ignoreMiddle, ignoreRight) -> {
+            try { throw new IllegalStateException(); } finally { cdl.countDown();}
+        }).completable(completableFuture);
         new Thread(consumable.processable(left, middle, right)).start();
-        assertDoesNotThrow(() -> cdl.await(1, TimeUnit.SECONDS), "CompletableFuture is not Done");
+        boolean completed = cdl.await(1, TimeUnit.SECONDS);
+        assertTrue(completed, "CompletableFuture is not Done");
         assertThrows(ExecutionException.class, completableFuture::get, "CompletableFuture has to be completed exceptionally");
         try {
             completableFuture.get();
@@ -148,30 +254,35 @@ class TreFunctionalTest {
     @Test
     @SuppressWarnings("unchecked")
     void andThenTest() {
-        var trefunctional = trefunctional(trefunction::apply);
-        Function<Object, Object> function = mock(Function.class);
-        Object functionResult = mock(Object.class);
-        when(function.apply(result)).thenReturn(functionResult);
-        assertDoesNotThrow(() -> trefunctional.andThen(function).apply(left, middle, right), "TreFunctional.andThen(function).apply(l, rm, r) throws exception");
+        Function<Object, Integer> function = mock(Function.class);
+        when(function.apply(result)).thenReturn(random);
+        verify(function, never()).apply(any());
+        assertSame(random, trefunction.andThen(function).apply(left, middle, right), "Functional::andThen(functional) has to return right result");
         verify(function, times(1)).apply(result);
-        assertSame(functionResult, trefunctional.andThen(function).apply(left, middle, right), "TreFunctional::andThen has to return right value");
     }
 
     @BeforeEach
-    @SuppressWarnings("unchecked")
     void startUp() {
-        this.left = mock(Object.class);
-        this.right = mock(Object.class);
-        this.middle = mock(Object.class);
-        this.result = mock(Object.class);
-        this.trefunction = mock(TreFunctional.class);
-        when(trefunction.apply(this.left, this.middle, this.right)).thenReturn(this.result);
+        this.left = mock();
+        this.right = mock();
+        this.middle = mock();
+        this.result = mock();
+        this.trefunction = spy(new TreFunctionalImpl());
+        this.random = new Random().nextInt();
     }
 
     private Object left;
     private Object middle;
     private Object right;
     private Object result;
+    private Integer random;
     private TreFunctional<Object, Object, Object, Object> trefunction;
+
+    class TreFunctionalImpl implements TreFunctional<Object, Object, Object, Object> {
+        @Override
+        public Object execute(Object left, Object middle, Object right) {
+            return result;
+        }
+    }
 
 }

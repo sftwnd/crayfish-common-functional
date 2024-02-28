@@ -17,6 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -109,7 +110,7 @@ class ConsumableTest {
         completableFuture.thenAccept(ignore -> cdl.countDown());
         Consumable<Object> consumable = consumable(consumer::accept).completable(completableFuture);
         new Thread(consumable.processable(parameter)).start();
-        assertDoesNotThrow(() -> cdl.await(1, TimeUnit.SECONDS), "CompletableFuture is not Done");
+        assertDoesNotThrow(() -> cdl.await(150, TimeUnit.MILLISECONDS), "CompletableFuture is not Done");
         assertDoesNotThrow(() -> completableFuture.get(), "CompletableFuture was completed exceptionally");
         assertNull(completableFuture.get(), "CompletableFuture has wrong result");
         verify(consumer, times(1)).accept(parameter);
@@ -120,9 +121,12 @@ class ConsumableTest {
         CountDownLatch cdl = new CountDownLatch(1);
         CompletableFuture<Void> completableFuture = new CompletableFuture<>();
         completableFuture.thenAccept(ignore -> cdl.countDown());
-        Consumable<Object> consumable = consumable(ignore -> { throw new IllegalStateException(); }).completable(completableFuture);
+        Consumable<Object> consumable = consumable(ignore -> {
+            try { throw new IllegalStateException(); } finally { cdl.countDown();}
+        }).completable(completableFuture);
         new Thread(consumable.processable(parameter)).start();
-        assertDoesNotThrow(() -> cdl.await(1, TimeUnit.SECONDS), "CompletableFuture is not Done");
+        boolean completed = cdl.await(1, TimeUnit.SECONDS);
+        assertTrue(completed, "CompletableFuture is not Done");
         assertThrows(ExecutionException.class, completableFuture::get, "CompletableFuture has to be completed exceptionally");
         try {
             completableFuture.get();
@@ -142,7 +146,7 @@ class ConsumableTest {
     @BeforeEach
     @SuppressWarnings("unchecked")
     void startUp() {
-        this.parameter = mock(Object.class);
+        this.parameter = mock();
         this.consumer = mock(Consumer.class);
     }
 

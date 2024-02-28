@@ -16,6 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -100,7 +101,7 @@ class SupplyableTest {
     @Test
     @SuppressWarnings("unchecked")
     void completableTest() throws ExecutionException, InterruptedException {
-        var result = mock(Object.class);
+        var result = mock();
         CountDownLatch cdl = new CountDownLatch(1);
         CompletableFuture<Object> completableFuture = new CompletableFuture<>();
         completableFuture.thenAccept(ignore -> cdl.countDown());
@@ -108,7 +109,7 @@ class SupplyableTest {
         when(supplier.get()).thenReturn(result);
         Processable processable = supplyable(supplier::get).completable(completableFuture);
         new Thread(processable).start();
-        assertDoesNotThrow(() -> cdl.await(1, TimeUnit.SECONDS), "CompletableFuture is not Done");
+        assertDoesNotThrow(() -> cdl.await(150, TimeUnit.MILLISECONDS), "CompletableFuture is not Done");
         assertEquals(result, completableFuture.get(), "CompletableFuture has wrong result");
         verify(supplier, times(1)).get();
     }
@@ -118,9 +119,12 @@ class SupplyableTest {
         CountDownLatch cdl = new CountDownLatch(1);
         CompletableFuture<Object> completableFuture = new CompletableFuture<>();
         completableFuture.thenAccept(ignore -> cdl.countDown());
-        Runnable runnable = supplyable(() -> { throw new IllegalStateException(); }).completable(completableFuture);
+        Runnable runnable = supplyable(() -> {
+            try { throw new IllegalStateException(); } finally { cdl.countDown();}
+        }).completable(completableFuture);
         new Thread(runnable).start();
-        assertDoesNotThrow(() -> cdl.await(1, TimeUnit.SECONDS), "CompletableFuture is not Done");
+        boolean completed = cdl.await(1, TimeUnit.SECONDS);
+        assertTrue(completed, "CompletableFuture is not Done");
         assertThrows(ExecutionException.class, completableFuture::get, "CompletableFuture has to be completed exceptionally");
         try {
             completableFuture.get();
@@ -140,7 +144,7 @@ class SupplyableTest {
     @BeforeEach
     @SuppressWarnings("unchecked")
     void startUp() {
-        this.result = mock(Object.class);
+        this.result = mock();
         this.supplier = mock(Supplier.class);
         when(supplier.get()).thenReturn(this.result);
     }
