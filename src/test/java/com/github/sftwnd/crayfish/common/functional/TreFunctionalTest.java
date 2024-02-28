@@ -106,22 +106,32 @@ class TreFunctionalTest {
     }
 
     @Test
-    void furtherProcessableTest() {
+    void furtherRunTest() {
         var runnable = mock(Runnable.class);
         doNothing().when(runnable).run();
         verify(runnable, never()).run();
-        assertSame(this.result, trefunction.further(runnable::run).apply(left, middle, right), "Functional::further(processable) has to return right result");
+        assertSame(this.result, trefunction.furtherRun(runnable::run).apply(left, middle, right), "Functional::furtherRun(processable) has to return right result");
         verify(runnable, times(1)).run();
     }
 
     @Test
     @SuppressWarnings("unchecked")
-    void furtherTest() {
+    void furtherAcceptTest() {
         var consumable = mock(Consumable.class);
         doNothing().when(consumable).accept(any());
         verify(consumable, never()).accept(any());
-        assertSame(this.result, trefunction.further(consumable::accept).apply(left, middle, right), "Functional::further(consumable) has to return right result");
+        assertSame(this.result, trefunction.furtherAccept(consumable::accept).apply(left, middle, right), "Functional::furtherAccept(consumable) has to return right result");
         verify(consumable, times(1)).accept(result);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void furtherApplyTest() {
+        Function<Object, Integer> function = mock(Function.class);
+        when(function.apply(result)).thenReturn(random);
+        verify(function, never()).apply(any());
+        assertSame(random, trefunction.furtherApply(function::apply).apply(left, middle, right), "Functional::andThen(functional) has to return right result");
+        verify(function, times(1)).apply(result);
     }
 
     @Test
@@ -249,16 +259,6 @@ class TreFunctionalTest {
         completableFuture.complete(null);
         trefunctional(this.trefunction::apply).completable(completableFuture).accept(left, middle, right);
         verify(this.trefunction, never()).apply(any(), any(), any());
-    }
-
-    @Test
-    @SuppressWarnings("unchecked")
-    void andThenTest() {
-        Function<Object, Integer> function = mock(Function.class);
-        when(function.apply(result)).thenReturn(random);
-        verify(function, never()).apply(any());
-        assertSame(random, trefunction.andThen(function).apply(left, middle, right), "Functional::andThen(functional) has to return right result");
-        verify(function, times(1)).apply(result);
     }
 
     @BeforeEach
