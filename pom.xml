@@ -4,7 +4,7 @@
 
     <groupId>com.github.sftwnd.crayfish.common</groupId>
     <artifactId>crayfish-common-functional</artifactId>
-    <version>0.0.1-M2-SNAPSHOT</version>
+    <version>0.0.1-M3-SNAPSHOT</version>
 
     <name>CrayFish :: COMMON :: Functional</name>
     <description>
