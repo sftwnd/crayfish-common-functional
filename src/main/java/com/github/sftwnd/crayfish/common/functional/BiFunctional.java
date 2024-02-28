@@ -106,6 +106,15 @@ public interface BiFunctional<T, U, R> extends BiFunction<T, U, R> {
     }
 
     /**
+     * Выполнение кода от тех же параметров, что и у {@link BiFunctional} после вычисления результата, но до его выдачи
+     * @param consumable исполняемый код после вычисления результата, использующий вычисленное значение
+     * @return обогащённый {@link BiFunctional}
+     */
+    default @NonNull BiFunctional<T, U, R> andAccept(@NonNull BiConsumable<? super T, ? super U> consumable) {
+        return (left, right) -> with(supplyable(left, right)).primarily(consumable.processable(left, right));
+    }
+
+    /**
      * Выполнение кода после вычисления результата с его трансформацией заданной функцией
      * @param functional исполняемый код после вычисления результата для его преобразования
      * @return обогащённый BiFunctional
@@ -123,6 +132,16 @@ public interface BiFunctional<T, U, R> extends BiFunction<T, U, R> {
      */
     default @NonNull BiFunctional<T, U, R> previously(@NonNull Processable processable) {
         return (left, right) -> with(BiFunctional.this.supplyable(left, right)).primarily(processable);
+    }
+
+    /**
+     * Выполнение кода перед вычислением результата функции
+     * @param preconsumable исполняемый код от тех же параметров, что и {@link BiFunctional} перед вычислением результата
+     * @return обогащённый TreFunctional
+     */
+    default @NonNull BiFunctional<T, U, R> previously(@NonNull BiConsumable<? super T, ? super U> preconsumable) {
+        return (left, right) -> with(BiFunctional.this.supplyable(left, right))
+                .primarily(preconsumable.processable(left, right));
     }
 
     /**

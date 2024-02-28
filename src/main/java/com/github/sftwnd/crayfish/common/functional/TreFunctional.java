@@ -118,6 +118,15 @@ public interface TreFunctional<T, U, V, R> {
     }
 
     /**
+     * Выполнение кода от тех же параметров, что и у {@link TreFunctional} после вычисления результата, но до его выдачи
+     * @param consumable исполняемый код после вычисления результата, использующий вычисленное значение
+     * @return обогащённый {@link TreFunctional}
+     */
+    default @NonNull TreFunctional<T, U, V, R> andAccept(@NonNull TreConsumable<? super T, ? super U, ? super V> consumable) {
+        return (left, middle, right) -> with(supplyable(left, middle, right)).primarily(consumable.processable(left, middle, right));
+    }
+
+    /**
      * Выполнение кода после вычисления результата с его трансформацией заданной функцией
      * @param functional исполняемый код после вычисления результата для его преобразования
      * @return обогащённый TreFunctional
@@ -135,6 +144,16 @@ public interface TreFunctional<T, U, V, R> {
      */
     default @NonNull TreFunctional<T, U, V, R> previously(@NonNull Processable processable) {
         return (left, middle, right) -> with(TreFunctional.this.supplyable(left, middle, right)).primarily(processable);
+    }
+
+    /**
+     * Выполнение кода перед вычислением результата функции
+     * @param preconsumable исполняемый код от тех же параметров, что и {@link TreFunctional} перед вычислением результата
+     * @return обогащённый TreFunctional
+     */
+    default @NonNull TreFunctional<T, U, V, R> previously(@NonNull TreConsumable<? super T, ? super U, ? super V> preconsumable) {
+        return (left, middle, right) -> with(TreFunctional.this.supplyable(left, middle, right))
+                .primarily(preconsumable.processable(left, middle, right));
     }
 
     /**

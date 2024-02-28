@@ -117,6 +117,16 @@ class BiFunctionalTest {
 
     @Test
     @SuppressWarnings("unchecked")
+    void andAcceptTest() {
+        var consumable = mock(BiConsumable.class);
+        doNothing().when(consumable).accept(any(), any());
+        verify(consumable, never()).accept(any(), any());
+        assertSame(this.result, bifunction.andAccept(consumable::accept).apply(left, right), "BiFunctional::andAccept(consumable) has to return right result");
+        verify(consumable, times(1)).accept(left, right);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
     void furtherApplyTest() {
         Function<Object, Integer> function = mock(Function.class);
         when(function.apply(result)).thenReturn(randomValue);
@@ -126,7 +136,7 @@ class BiFunctionalTest {
     }
 
     @Test
-    void previouslyTest() {
+    void previouslyProcessableTest() {
         var mock = mock(Runnable.class);
         doNothing().when(mock).run();
         Runnable runnable = () -> {
@@ -134,8 +144,22 @@ class BiFunctionalTest {
             mock.run();
         };
         verify(mock, never()).run();
-        assertSame(this.result, bifunction.previously(runnable::run).apply(left,  right), "BiFunctional::previously has to return right result");
+        assertSame(this.result, bifunction.previously(runnable::run).apply(left,  right), "BiFunctional::previously(Processable) has to return right result");
         verify(mock, times(1)).run();
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void previouslyBiConsumableTest() {
+        var mock = mock(BiConsumable.class);
+        doNothing().when(mock).accept(any(), any());
+        BiConsumable<Object, Object> treConsumable = (left, right) -> {
+            verify(this.bifunction, never()).apply(any(), any());
+            mock.accept(left, right);
+        };
+        verify(mock, never()).accept(any(), any());
+        assertSame(this.result, bifunction.previously(treConsumable::accept).apply(left, right), "TreFunctional::previously(BiConsumable) has to return right result");
+        verify(mock, times(1)).accept(left, right);
     }
 
     @Test

@@ -100,6 +100,16 @@ class FunctionalTest {
 
     @Test
     @SuppressWarnings("unchecked")
+    void andAcceptTest() {
+        var consumable = mock(Consumable.class);
+        doNothing().when(consumable).accept(any());
+        verify(consumable, never()).accept(any());
+        assertSame(this.result, function.andAccept(consumable::accept).apply(parameter), "BiFunctional::andAccept(consumable) has to return right result");
+        verify(consumable, times(1)).accept(parameter);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
     void furtherApplyTest() {
         Function<Object, Integer> function = mock(Function.class);
         when(function.apply(result)).thenReturn(randomValue);
@@ -109,7 +119,7 @@ class FunctionalTest {
     }
 
     @Test
-    void previouslyTest() {
+    void previouslyProcessableTest() {
         var mock = mock(Runnable.class);
         doNothing().when(mock).run();
         Runnable runnable = () -> {
@@ -117,8 +127,22 @@ class FunctionalTest {
             mock.run();
         };
         verify(mock, never()).run();
-        assertSame(this.result, function.previously(runnable::run).apply(parameter), "Functional::previously has to return right result");
+        assertSame(this.result, function.previously(runnable::run).apply(parameter), "Functional::previously(Processable) has to return right result");
         verify(mock, times(1)).run();
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void previouslyConsumableTest() {
+        var mock = mock(Consumable.class);
+        doNothing().when(mock).accept(any());
+        Consumable<Object> treConsumable = parameter -> {
+            verify(this.function, never()).apply(any());
+            mock.accept(parameter);
+        };
+        verify(mock, never()).accept(any());
+        assertSame(this.result, function.previously(treConsumable::accept).apply(parameter), "TreFunctional::previously(Consumable) has to return right result");
+        verify(mock, times(1)).accept(parameter);
     }
 
     @Test

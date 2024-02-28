@@ -126,6 +126,16 @@ class TreFunctionalTest {
 
     @Test
     @SuppressWarnings("unchecked")
+    void andAcceptTest() {
+        var consumable = mock(TreConsumable.class);
+        doNothing().when(consumable).accept(any(), any(), any());
+        verify(consumable, never()).accept(any(), any(), any());
+        assertSame(this.result, trefunction.andAccept(consumable::accept).apply(left, middle, right), "TreFunctional::andAccept(consumable) has to return right result");
+        verify(consumable, times(1)).accept(left, middle, right);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
     void furtherApplyTest() {
         Function<Object, Integer> function = mock(Function.class);
         when(function.apply(result)).thenReturn(randomValue);
@@ -135,7 +145,7 @@ class TreFunctionalTest {
     }
 
     @Test
-    void previouslyTest() {
+    void previouslyProcessableTest() {
         var mock = mock(Runnable.class);
         doNothing().when(mock).run();
         Runnable runnable = () -> {
@@ -143,8 +153,22 @@ class TreFunctionalTest {
             mock.run();
         };
         verify(mock, never()).run();
-        assertSame(this.result, trefunction.previously(runnable::run).apply(left, middle, right), "TreFunctional::previously has to return right result");
+        assertSame(this.result, trefunction.previously(runnable::run).apply(left, middle, right), "TreFunctional::previously(Runnable) has to return right result");
         verify(mock, times(1)).run();
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void previouslyTreConsumableTest() {
+        var mock = mock(TreConsumable.class);
+        doNothing().when(mock).accept(any(), any(), any());
+        TreConsumable<Object, Object, Object> treConsumable = (left, middle, right) -> {
+            verify(this.trefunction, never()).apply(any(), any(), any());
+            mock.accept(left, middle, right);
+        };
+        verify(mock, never()).accept(any(), any(), any());
+        assertSame(this.result, trefunction.previously(treConsumable::accept).apply(left, middle, right), "TreFunctional::previously(TreConsumable) has to return right result");
+        verify(mock, times(1)).accept(left, middle, right);
     }
 
     @Test

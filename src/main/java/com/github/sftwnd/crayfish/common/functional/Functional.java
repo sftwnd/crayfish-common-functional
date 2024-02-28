@@ -83,6 +83,15 @@ public interface Functional<T, R> extends Function<T, R> {
     }
 
     /**
+     * Выполнение кода от тех же параметров, что и у {@link Functional} после вычисления результата, но до его выдачи
+     * @param consumable исполняемый код после вычисления результата, использующий вычисленное значение
+     * @return обогащённый {@link Functional}
+     */
+    default @NonNull Functional<T, R> andAccept(@NonNull Consumable<? super T> consumable) {
+        return parameter -> with(supplyable(parameter)).primarily(consumable.processable(parameter));
+    }
+
+    /**
      * Выполнение кода после вычисления результата с его трансформацией заданной функцией
      * @param functional исполняемый код после вычисления результата для его преобразования
      * @return обогащённый Functional
@@ -100,6 +109,15 @@ public interface Functional<T, R> extends Function<T, R> {
      */
     default @NonNull Functional<T, R> previously(@NonNull Processable processable) {
         return parameter -> with(this.supplyable(parameter)).primarily(processable);
+    }
+
+    /**
+     * Выполнение кода перед вычислением результата функции
+     * @param preconsumable исполняемый код от тех же параметров, что и {@link Functional} перед вычислением результата
+     * @return обогащённый TreFunctional
+     */
+    default @NonNull Functional<T, R> previously(@NonNull Consumable<? super T> preconsumable) {
+        return parameter -> with(Functional.this.supplyable(parameter)).primarily(preconsumable.processable(parameter));
     }
 
     /**
