@@ -8,6 +8,8 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
+import static com.github.sftwnd.crayfish.common.functional.With.with;
+
 /**
  * Расширение {@link Supplier} в объединении с {@link Callable}
  * В случае с Supplier::get вызывается метод Callable::call, но если будет выброшено исключение,
@@ -43,6 +45,44 @@ public interface Supplyable<T> extends Supplier<T>, Callable<T> {
      */
     default @NonNull Processable processable() {
         return this::get;
+    }
+
+    /**
+     * Выполнение кода после вычисления результата, но до его выдачи
+     * @param processable исполняемый код после вычисления результата
+     * @return обогащённый Supplyable
+     */
+    default @NonNull Supplyable<T> furtherRun(@NonNull Processable processable) {
+        return () -> with(this).further(processable);
+    }
+
+    /**
+     * Выполнение кода после вычисления результата, но до его выдачи
+     * @param consumable исполняемый код после вычисления результата, использующий вычисленное значение
+     * @return обогащённый Supplyable
+     */
+    default @NonNull Supplyable<T> furtherAccept(@NonNull Consumable<? super T> consumable) {
+        return () -> with(this).consume(consumable);
+    }
+
+    /**
+     * Выполнение кода после вычисления результата с его трансформацией заданной функцией
+     * @param functional исполняемый код после вычисления результата для его преобразования
+     * @return обогащённый Supplyable
+     * @param <S> тип результата итоговой функции
+     */
+    default <S> @NonNull Supplyable<S> furtherApply(@NonNull Functional<? super T, ? extends S> functional) {
+        Objects.requireNonNull(functional, "Functional::furtherApply - functional is null");
+        return () -> functional.apply(this.get());
+    }
+
+    /**
+     * Выполнение кода перед вычислением результата функции
+     * @param processable исполняемый код перед вычислением результата
+     * @return обогащённый Functional
+     */
+    default @NonNull Supplyable<T> previously(@NonNull Processable processable) {
+        return () -> with(this).primarily(processable);
     }
 
     /**

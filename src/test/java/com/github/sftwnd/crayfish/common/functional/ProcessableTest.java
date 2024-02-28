@@ -15,6 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -103,7 +104,7 @@ class ProcessableTest {
         completableFuture.thenAccept(ignore -> cdl.countDown());
         Processable processable = processable(runnable::run).completable(completableFuture);
         new Thread(processable).start();
-        assertDoesNotThrow(() -> cdl.await(1, TimeUnit.SECONDS), "CompletableFuture is not Done");
+        assertDoesNotThrow(() -> cdl.await(150, TimeUnit.MILLISECONDS), "CompletableFuture is not Done");
         assertDoesNotThrow(() -> completableFuture.get(), "CompletableFuture was completed exceptionally");
         assertNull(completableFuture.get(), "CompletableFuture has wrong result");
         verify(runnable, times(1)).run();
@@ -114,9 +115,12 @@ class ProcessableTest {
         CountDownLatch cdl = new CountDownLatch(1);
         CompletableFuture<Void> completableFuture = new CompletableFuture<>();
         completableFuture.thenAccept(ignore -> cdl.countDown());
-        Runnable runnable = processable(() -> { throw new IllegalStateException(); }).completable(completableFuture);
+        Runnable runnable = processable(() -> {
+            try { throw new IllegalStateException(); } finally { cdl.countDown();}
+        }).completable(completableFuture);
         new Thread(runnable).start();
-        assertDoesNotThrow(() -> cdl.await(1, TimeUnit.SECONDS), "CompletableFuture is not Done");
+        boolean completed = cdl.await(1, TimeUnit.SECONDS);
+        assertTrue(completed, "CompletableFuture is not Done");
         assertThrows(ExecutionException.class, completableFuture::get, "CompletableFuture has to be completed exceptionally");
         try {
             completableFuture.get();
