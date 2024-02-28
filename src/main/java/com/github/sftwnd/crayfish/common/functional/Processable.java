@@ -8,8 +8,6 @@ import java.util.concurrent.CompletableFuture;
 
 /**
  * Расширение {@link Runnable}, но метод может бросать исключение.
- * Помимо {@link Runnable} сам {@link Processable} является {@link Supplyable}, возвращающий Void
-
  * Used sonar warnings:
  *      java:S112   Generic exceptions should never be thrown
  */
@@ -95,7 +93,7 @@ public interface Processable extends Runnable {
      * @param completableFuture связываемая CompletableFuture
      * @return Consumer для вызова функции
      */
-    default @NonNull Processable completable(@NonNull CompletableFuture<Void> completableFuture) {
+    default @NonNull Processable completable(@NonNull CompletableFuture<?> completableFuture) {
         Objects.requireNonNull(completableFuture, "Processable::completable - completableFuture is null");
         return () -> {
             try {

@@ -9,7 +9,6 @@ import java.util.function.Consumer;
 
 /**
  * Расширение {@link Consumer}, но метод может бросать исключение.
- * Помимо {@link Consumer} сам {@link Consumable} является {@link Functional}, возвращающим Void
  * @param <T> тип параметра
  * Used sonar warnings:
  *      java:S112   Generic exceptions should never be thrown
@@ -113,7 +112,7 @@ public interface Consumable<T> extends Consumer<T> {
      * @param completableFuture связываемая CompletableFuture
      * @return Consumer для вызова функции
      */
-    default @NonNull Consumable<T> completable(@NonNull CompletableFuture<Void> completableFuture) {
+    default @NonNull Consumable<T> completable(@NonNull CompletableFuture<?> completableFuture) {
         Objects.requireNonNull(completableFuture, "Consumable::completable - completableFuture is null");
         return parameter -> {
             try {

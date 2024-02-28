@@ -10,7 +10,6 @@ import java.util.function.BiConsumer;
 
 /**
  * Расширение {@link BiConsumer}, но метод может бросать исключение.
- * Помимо {@link BiConsumer} сам {@link BiConsumable} является {@link BiFunctional}, возвращающим Void
  * @param <T> тип первого параметра
  * @param <U> тип второго параметра
  * Used sonar warnings:
@@ -143,7 +142,7 @@ public interface BiConsumable <T, U> extends BiConsumer<T, U> {
      * @param completableFuture связываемая CompletableFuture
      * @return Consumer для вызова функции
      */
-    default @NonNull BiConsumable<T, U> completable(@NonNull CompletableFuture<Void> completableFuture) {
+    default @NonNull BiConsumable<T, U> completable(@NonNull CompletableFuture<?> completableFuture) {
         Objects.requireNonNull(completableFuture, "BiConsumable::completable - completableFuture is null");
         return (left, right) -> {
             try {

@@ -10,8 +10,8 @@ import java.util.function.Supplier;
 
 /**
  * Расширение {@link Supplier} в объединении с {@link Callable}
- * Интерфейс является одновременно и {@link Supplier} и {@link Callable}. В случае с Supplier::get вызывается метод Callable::call,
- * но если будет выброшено исключение, то оно через lombok {@link SneakyThrows} будет обёрнуто в Runtime исключение и выброшено наружу.
+ * В случае с Supplier::get вызывается метод Callable::call, но если будет выброшено исключение,
+ * то оно будет выброшено наружу как unchecked
  * @param <T> тип результата
  * Used sonar warnings:
  *      java:S112   Generic exceptions should never be thrown
