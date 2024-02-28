@@ -31,9 +31,9 @@
 
     <scm>
         <url>https://github.com/sftwnd/crayfish-common-functional</url>
-        <connection>scm:git:https://github.com/sftwnd/crayfish-common-functional.git</connection>
+        <connection>scm:git:git@github.com:sftwnd/crayfish-common-functional.git</connection>
         <developerConnection>scm:git:git@github.com:sftwnd/crayfish-common-functional.git</developerConnection>
-        <tag>crayfish-common-functional-0.0.2</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <distributionManagement>
