@@ -93,7 +93,7 @@ public interface BiFunctional<T, U, R> extends BiFunction<T, U, R> {
      * @return обогащённый BiFunctional
      */
     default @NonNull BiFunctional<T, U, R> furtherRun(@NonNull Processable processable) {
-        return (left, right) -> with(() -> apply(left, right)).further(processable);
+        return (left, right) -> with(supplyable(left, right)).further(processable);
     }
 
     /**
@@ -102,7 +102,7 @@ public interface BiFunctional<T, U, R> extends BiFunction<T, U, R> {
      * @return обогащённый BiFunctional
      */
     default @NonNull BiFunctional<T, U, R> furtherAccept(@NonNull Consumable<? super R> consumable) {
-        return (left, right) -> with(() -> apply(left, right)).consume(consumable);
+        return (left, right) -> with(supplyable(left, right)).consume(consumable);
     }
 
     /**

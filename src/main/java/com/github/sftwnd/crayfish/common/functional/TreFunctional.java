@@ -105,7 +105,7 @@ public interface TreFunctional<T, U, V, R> {
      * @return обогащённый TreFunctional
      */
     default @NonNull TreFunctional<T, U, V, R> furtherRun(@NonNull Processable processable) {
-        return (left, middle, right) -> with(() -> apply(left, middle, right)).further(processable);
+        return (left, middle, right) -> with(supplyable(left, middle, right)).further(processable);
     }
 
     /**
@@ -114,7 +114,7 @@ public interface TreFunctional<T, U, V, R> {
      * @return обогащённый TreFunctional
      */
     default @NonNull TreFunctional<T, U, V, R> furtherAccept(@NonNull Consumable<? super R> consumable) {
-        return (left, middle, right) -> with(() -> apply(left, middle, right)).consume(consumable);
+        return (left, middle, right) -> with(supplyable(left, middle, right)).consume(consumable);
     }
 
     /**
